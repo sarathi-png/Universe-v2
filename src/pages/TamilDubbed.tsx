@@ -111,9 +111,50 @@ export default function TamilDubbed() {
 
   const displayCached = showAllCached ? cached : cached.slice(0, 24);
 
+  // Filter movies with duration > 40 minutes for "Ready to Play" section
+  const parseDuration = (duration: string | null): number => {
+    if (!duration || 'not available' in duration.toLowerCase()) return 0;
+    const str = duration.toLowerCase();
+    if (str.includes(':')) {
+      const parts = str.split(':').map(p => p.trim()).filter(p => p);
+      if (parts.length === 2) {
+        const minutes = parseFloat(parts[0]);
+        const seconds = parseFloat(parts[1].replace('min', '')) || 0;
+        return minutes + seconds / 60;
+      } else if (parts.length === 3) {
+        const hours = parseFloat(parts[0]);
+        const minutes = parseFloat(parts[1]);
+        const seconds = parseFloat(parts[2].replace('min', '')) || 0;
+        return (hours * 60) + minutes + seconds / 60;
+      }
+    } else {
+      const match = str.match(/(\d+(?:\.\d+)?)/);
+      if (match) return parseFloat(match[1]);
+    }
+    return 0;
+  };
+
   const extraCached = cachedItems.filter(
     (c) => c.tmdbId && !mergedPopular.some((p) => p.tmdbId === c.tmdbId)
   );
+
+  const cachedWithDuration = cached.filter(item => {
+    const duration = item.duration || '';
+    return parseDuration(duration) > 40;
+  });
+
+  const extraCachedWithDuration = extraCached.filter(entry => {
+    const duration = entry.duration || '';
+    const posterValid = entry.posterUrl?.startsWith('http') || 
+                       (entry.posterUrl?.startsWith('/') && entry.posterUrl.includes('/shots/')) ||
+                       false;
+    return parseDuration(duration) > 40 && posterValid;
+  });
+
+  const filteredCached = cachedWithDuration;
+  const filteredExtraCached = extraCachedWithDuration;
+
+  const displayCached = showAllCached ? filteredCached : filteredCached.slice(0, 24);
 
   return (
     <div className="min-h-screen pt-20 pb-24">
@@ -161,13 +202,13 @@ export default function TamilDubbed() {
                 <h2 className="text-xl font-bold text-white">
                   Ready to Play
                 </h2>
-                <span className="text-sm text-zinc-500">({cached.length})</span>
+                <span className="text-sm text-zinc-500">({filteredCached.length})</span>
               </div>
 
-              {cached.length === 0 ? (
+              {filteredCached.length === 0 ? (
                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 text-center">
                   <p className="text-sm text-zinc-500">
-                    No cached titles yet. Run <code className="text-violet-400">npm run dubmv:seed</code> to populate.
+                    No cached titles with duration > 40 min yet.
                   </p>
                 </div>
               ) : (
@@ -177,13 +218,13 @@ export default function TamilDubbed() {
                       <PopularCard key={`cached-${item.tmdbId}`} item={item} />
                     ))}
                   </div>
-                  {cached.length > 24 && (
+                  {filteredCached.length > 24 && (
                     <div className="mt-5 flex justify-center">
                       <button
                         onClick={() => setShowAllCached(!showAllCached)}
                         className="rounded-xl bg-white/5 px-5 py-2 text-sm font-semibold text-zinc-400 transition hover:bg-white/10 hover:text-white"
                       >
-                        {showAllCached ? "Show Less" : `Show All ${cached.length} Cached Titles`}
+                        {showAllCached ? "Show Less" : `Show All ${filteredCached.length} Cached Titles`}
                       </button>
                     </div>
                   )}
@@ -195,21 +236,21 @@ export default function TamilDubbed() {
         )}
 
         {/* Extra Cached (non-popular) */}
-        {extraCached.length > 0 && (
+        {filteredExtraCached.length > 0 && (
           <section className="mt-16">
             <div className="flex items-center gap-3 mb-5">
               <div className="h-3 w-3 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]" />
               <h2 className="text-xl font-bold text-white">Recently Added</h2>
-              <span className="text-sm text-zinc-500">({extraCached.length})</span>
+              <span className="text-sm text-zinc-500">({filteredExtraCached.length})</span>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {extraCached.slice(0, 24).map((entry) => (
+              {filteredExtraCached.slice(0, 24).map((entry) => (
                 <ExtraCachedCard key={entry.fileId} entry={entry} />
               ))}
             </div>
-            {extraCached.length > 24 && (
+            {filteredExtraCached.length > 24 && (
               <div className="mt-4 text-center text-sm text-zinc-500">
-                +{extraCached.length - 24} more
+                +{filteredExtraCached.length - 24} more
               </div>
             )}
           </section>
