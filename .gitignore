@@ -10,3 +10,5 @@ server_test.log
 server_test_err.log
 test_dubmv.html
 opencode-agent/
+.claude/
+.claude/
