@@ -34,8 +34,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://v2-torrent-stream.onrender.com"] }));
+app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://v2-torrent-stream.onrender.com", "https://novastream-v2.onrender.com"] }));
 app.use(express.json());
+
+// Block popups / redirects from embed sources on the watch page
+app.use("/watch", (_req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; frame-src *; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https:; form-action 'none'; base-uri 'self';"
+  );
+  next();
+});
 
 // API routes
 app.use("/api/tmdb", tmdbRouter);

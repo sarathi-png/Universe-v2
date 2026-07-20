@@ -1,6 +1,27 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePlayer, type SubtitleTrack, type AudioTrack } from "../hooks/usePlayer";
 
+// Block popup navigations from embed iframes
+let embedNavBlocker: ((e: Event) => void) | null = null;
+function enableEmbedBlocker() {
+  if (embedNavBlocker) return;
+  embedNavBlocker = (e: Event) => {
+    e.preventDefault();
+    const msg = (e as any).target?.outerHTML || "";
+    if (msg.includes("window.open") || msg.includes("location") || msg.includes("href")) return;
+    if (e.type === "beforeunload") {
+      window.location.hash = "blocked-redirect";
+    }
+  };
+  window.addEventListener("beforeunload", embedNavBlocker);
+}
+function disableEmbedBlocker() {
+  if (embedNavBlocker) {
+    window.removeEventListener("beforeunload", embedNavBlocker);
+    embedNavBlocker = null;
+  }
+}
+
 interface PlayerProps {
   src: string;
   poster?: string;
@@ -52,7 +73,13 @@ export default function Player({
 
   useEffect(() => {
     loadSource(src, externalSubtitles);
-  }, [src, loadSource]);
+    if (isEmbed) {
+      enableEmbedBlocker();
+    } else {
+      disableEmbedBlocker();
+    }
+    return () => disableEmbedBlocker();
+  }, [src, loadSource, isEmbed]);
 
   useEffect(() => {
     if (onProgress && playerState.currentTime > 0) {
@@ -155,6 +182,7 @@ export default function Player({
         <iframe
           src={src}
           className="h-full w-full"
+          sandbox="allow-scripts allow-same-origin allow-forms"
           allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
         />

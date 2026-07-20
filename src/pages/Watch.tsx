@@ -340,6 +340,7 @@ export default function Watch() {
                 <div className="flex flex-wrap gap-2 relative z-10">
                   {sources.map((s, i) => {
                     const active = i === sourceIdx;
+                    const isTorrent = s.provider === "Torrent";
                     return (
                       <button
                         key={`${s.name}-${i}`}
@@ -350,8 +351,17 @@ export default function Watch() {
                             : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
                         }`}
                       >
-                        <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px] shadow-emerald-400" />
+                        <span className={`h-2 w-2 rounded-full shadow-[0_0_8px] ${isTorrent ? "bg-emerald-400 shadow-emerald-400" : "bg-amber-400 shadow-amber-400"}`} />
                         <span className="font-semibold">{s.provider}</span>
+                        {isTorrent ? (
+                          <span className="rounded bg-emerald-600/20 px-1.5 text-[10px] text-emerald-300 font-semibold">
+                            Clean
+                          </span>
+                        ) : (
+                          <span className="rounded bg-amber-600/20 px-1.5 text-[10px] text-amber-300 font-semibold">
+                            Mirror
+                          </span>
+                        )}
                         <span className="rounded bg-black/40 px-1.5 text-[10px] text-zinc-400">
                           {s.quality}
                         </span>
