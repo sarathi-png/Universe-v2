@@ -51,14 +51,45 @@ export default function Watch() {
     if (!numId) return;
     setLoadingSources(true);
     try {
+      // Fetch existing embed/direct sources
       const result = await mediaStreamApi.getStream(
         numId, type as "movie" | "tv",
         type === "tv" ? season : undefined,
         type === "tv" ? episode : undefined,
         streamLang
       );
-      setSources(result.sources);
-      sourcesLenRef.current = result.sources.length;
+
+      // Build combined sources list – start with existing
+      let combined: MediaStreamSource[] = [...result.sources];
+
+      // Also search torrents by name if TMDB data is available
+      if (data) {
+        try {
+          const query = `${title(data)} ${data.release_date?.slice(0, 4) || ""}`;
+          const torrentRes = await mediaStreamApi.searchV2(query, {
+            quality: streamLang ? "all" : "1080p",
+            lang: streamLang || "all",
+            limit: 4,
+          });
+          const torrentSources: MediaStreamSource[] = (torrentRes.results || []).map((t: any) => ({
+            url: `/api/torrent/play?magnet=${encodeURIComponent(t.magnet)}`,
+            directUrl: null,
+            name: t.name,
+            provider: "Torrent",
+            quality: t.quality || "Unknown",
+            languages: t.languages || ["en"],
+            isEmbed: false,
+            playUrl: null,
+          }));
+          // Prepend torrent sources (preferred over embeds)
+          combined = [...torrentSources, ...combined];
+        } catch {
+          // Torrent search is optional; keep existing sources
+        }
+      }
+
+      setSources(combined);
+      sourcesLenRef.current = combined.length;
       setSubtitles(
         result.subtitles.map((s, i) => ({
           id: i,
@@ -76,7 +107,7 @@ export default function Watch() {
       setFailoverMsg("Failed to load sources. Try again later.");
     }
     setLoadingSources(false);
-  }, [numId, type, season, episode, streamLang]);
+  }, [numId, type, season, episode, streamLang, data]);
 
   useEffect(() => {
     fetchSources();

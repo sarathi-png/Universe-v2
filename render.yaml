@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: novastream-v2
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MAX_ACTIVE_TORRENTS
+        value: "3"
+      - key: IDLE_TIMEOUT_MS
+        value: "900000"
+      - key: TMDB_API_KEY
+        sync: false
+      - key: PORT
+        value: "3001"

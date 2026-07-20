@@ -109,8 +109,6 @@ export default function TamilDubbed() {
 
   const cached = filtered.filter((i) => i.cached);
 
-  const displayCached = showAllCached ? cached : cached.slice(0, 24);
-
   // Filter movies with duration > 40 minutes for "Ready to Play" section
   const parseDuration = (duration: string | null): number => {
     if (!duration || 'not available' in duration.toLowerCase()) return 0;
@@ -208,7 +206,7 @@ export default function TamilDubbed() {
               {filteredCached.length === 0 ? (
                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 text-center">
                   <p className="text-sm text-zinc-500">
-                    No cached titles with duration > 40 min yet.
+                    No cached titles with duration {'>'} 40 min yet.
                   </p>
                 </div>
               ) : (

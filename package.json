@@ -53,5 +53,11 @@
     "tsx": "^4.22.3",
     "typescript": "5.9.3",
     "vite": "7.3.2"
+  },
+  "allowScripts": {
+    "utp-native@2.5.3": true,
+    "node-datachannel@0.32.3": true,
+    "bufferutil@4.1.0": true,
+    "utf-8-validate@6.0.6": true
   }
 }

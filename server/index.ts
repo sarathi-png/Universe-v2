@@ -7,6 +7,8 @@ import { tmdbRouter } from "./routes/tmdb.js";
 import { languageRouter } from "./routes/language.js";
 import { torrentRouter } from "./routes/torrent.js";
 import { dubmvRouter } from "./routes/dubmv.js";
+import { searchV2Router } from "./routes/searchV2.js";
+import { KeepWarm } from "./lib/keep-warm.js";
 
 // Prevent WebTorrent microtask crashes from killing the server (Node v24 compat)
 const WT_PATTERNS = ["reading 'reserve'", "reading 'missing'"];
@@ -32,7 +34,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173"] }));
+app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://v2-torrent-stream.onrender.com"] }));
 app.use(express.json());
 
 // API routes
@@ -40,9 +42,24 @@ app.use("/api/tmdb", tmdbRouter);
 app.use("/api/language", languageRouter);
 app.use("/api/torrent", torrentRouter);
 app.use("/api/dubmv", dubmvRouter);
+app.use("/api/search/v2", searchV2Router);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", version: "2.0.0", timestamp: Date.now() });
+});
+
+// Extended status with torrent engine info
+app.get("/api/status", async (_req, res) => {
+  try {
+    const { getTorrentStatus } = await import("./services/torrentManager.js");
+    res.json({
+      uptime: process.uptime(),
+      memory: { rss: Math.round(process.memoryUsage().rss / 1024 / 1024), heap: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) },
+      engine: getTorrentStatus(),
+    });
+  } catch {
+    res.json({ uptime: process.uptime(), engine: "unavailable" });
+  }
 });
 
 // Internal video player page for dubmv proxy (supports seeking)
@@ -78,8 +95,20 @@ app.get("*", (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`NOVASTREAM V2 server running on http://localhost:${PORT}`);
+  console.log(`NOVASTREAM V2 server running on http://0.0.0.0:${PORT}`);
+  console.log(`  Search:      http://localhost:${PORT}/api/search/v2?q=Inception&quality=1080p`);
+  console.log(`  Stream:      http://localhost:${PORT}/api/torrent/play?magnet=...`);
+  console.log(`  Language:    http://localhost:${PORT}/api/language/media/{tmdbId}`);
+  console.log(`  Health:      http://localhost:${PORT}/api/health`);
+  console.log(`  Status:      http://localhost:${PORT}/api/status`);
 });
+
+// Keep-warm for Render (prevents free tier sleep)
+const warmUrl = process.env.RENDER_EXTERNAL_URL || process.env.KEEP_WARM_URL;
+if (warmUrl) {
+  const keepWarm = new KeepWarm(`${warmUrl}/api/health`);
+  keepWarm.start();
+}
 
 // Pre-scan popular movies so language cache is warm on first visit
 async function preScanPopular() {
