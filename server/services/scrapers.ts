@@ -1,7 +1,11 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import createHttpsProxyAgent from "https-proxy-agent";
 
-const http = axios.create({ timeout: 10000, validateStatus: () => true });
+const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
+const proxyConfig = proxyUrl ? { httpsAgent: createHttpsProxyAgent(proxyUrl), proxy: false } : {};
+
+const http = axios.create({ timeout: 15000, validateStatus: () => true, ...proxyConfig });
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 const TRACKERS = [
@@ -126,126 +130,161 @@ async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
 
 // ── TPB (apibay, API-based) ────────────────────────────────────────
 
-async function searchTPB(query: string): Promise<ScrapedTorrent[]> {
-  try {
-    const url = `https://apibay.org/q.php?q=${encodeURIComponent(query)}&cat=201`;
-    const res = await http.get(url);
-    const data = res.data as any[];
-    if (!Array.isArray(data)) return [];
+const TPB_MIRRORS = [
+  "https://apibay.org",
+  "https://apibay.xyz",
+  "https://tpb.party",
+  "https://thepiratebay.org",
+];
 
-    const seen = new Set<string>();
-    return data
-      .filter((t: any) => t.info_hash && t.name && !seen.has(t.info_hash) && seen.add(t.info_hash))
-      .filter((t: any) => Number(t.seeders) > 0)
-      .map((t: any) => ({
-        magnet: buildMagnet(t.info_hash, t.name),
-        name: t.name,
-        quality: parseQuality(t.name),
-        size: formatSize(Number(t.size) || 0),
-        seeds: Number(t.seeders) || 0,
-        peers: Number(t.leechers) || 0,
-        source: "TPB",
-        languages: detectLanguages(t.name),
-      }))
-      .sort((a, b) => b.seeds - a.seeds);
-  } catch (err) {
-    console.error("[scraper:TPB]", (err as any)?.message);
-    return [];
+async function searchTPB(query: string): Promise<ScrapedTorrent[]> {
+  const errors: string[] = [];
+  for (const mirror of TPB_MIRRORS) {
+    try {
+      const url = `${mirror}/q.php?q=${encodeURIComponent(query)}&cat=201`;
+      const res = await http.get(url);
+      const data = res.data as any[];
+      if (!Array.isArray(data)) continue;
+
+      const seen = new Set<string>();
+      const results = data
+        .filter((t: any) => t.info_hash && t.name && !seen.has(t.info_hash) && seen.add(t.info_hash))
+        .filter((t: any) => Number(t.seeders) > 0)
+        .map((t: any) => ({
+          magnet: buildMagnet(t.info_hash, t.name),
+          name: t.name,
+          quality: parseQuality(t.name),
+          size: formatSize(Number(t.size) || 0),
+          seeds: Number(t.seeders) || 0,
+          peers: Number(t.leechers) || 0,
+          source: "TPB",
+          languages: detectLanguages(t.name),
+        }))
+        .sort((a, b) => b.seeds - a.seeds);
+      if (results.length > 0) return results;
+    } catch (err) {
+      errors.push(`${mirror}: ${(err as any)?.message}`);
+    }
   }
+  console.error("[scraper:TPB] all mirrors failed:", errors.join("; "));
+  return [];
 }
 
 // ── LimeTorrents (cheerio) ─────────────────────────────────────────
 
+const LIME_MIRRORS = [
+  "https://www.limetorrents.fun",
+  "https://www.limetorrents.info",
+  "https://limetorrents.buzz",
+];
+
 async function searchLimeTorrents(query: string): Promise<ScrapedTorrent[]> {
-  try {
-    const url = `https://www.limetorrents.fun/search/all/${encodeURIComponent(query)}/`;
-    const res = await http.get(url, { headers: { "User-Agent": UA } });
-    const $ = cheerio.load(res.data as string);
-    const results: ScrapedTorrent[] = [];
+  const errors: string[] = [];
+  for (const mirror of LIME_MIRRORS) {
+    try {
+      const url = `${mirror}/search/all/${encodeURIComponent(query)}/`;
+      const res = await http.get(url, { headers: { "User-Agent": UA } });
+      const $ = cheerio.load(res.data as string);
+      const results: ScrapedTorrent[] = [];
 
-    $("table.table2 tr").each((_i, row) => {
-      const tds = $(row).find("td");
-      if (tds.length < 6) return;
-      const nameEl = $(tds[0]).find("div.tt-name a").last();
-      const name = nameEl.text().trim();
-      if (!name) return;
-      const torrentLink = $(tds[0]).find("a.csprite_dl14").attr("href") || "";
-      const hash = torrentLink.match(/\/([A-Fa-f0-9]{40})\.torrent/)?.[1]?.toLowerCase();
-      if (!hash) return;
-      const seeds = parseInt($(tds[3]).text().trim()) || 0;
-      if (seeds < 1) return;
-      const peers = parseInt($(tds[4]).text().trim()) || 0;
-      const sizeText = $(tds[2]).text().trim();
+      $("table.table2 tr").each((_i, row) => {
+        const tds = $(row).find("td");
+        if (tds.length < 6) return;
+        const nameEl = $(tds[0]).find("div.tt-name a").last();
+        const name = nameEl.text().trim();
+        if (!name) return;
+        const torrentLink = $(tds[0]).find("a.csprite_dl14").attr("href") || "";
+        const hash = torrentLink.match(/\/([A-Fa-f0-9]{40})\.torrent/)?.[1]?.toLowerCase();
+        if (!hash) return;
+        const seeds = parseInt($(tds[3]).text().trim()) || 0;
+        if (seeds < 1) return;
+        const peers = parseInt($(tds[4]).text().trim()) || 0;
+        const sizeText = $(tds[2]).text().trim();
 
-      results.push({
-        magnet: buildMagnet(hash, name),
-        name, quality: parseQuality(name),
-        size: sizeText || "Unknown",
-        seeds, peers,
-        source: "LimeTorrents",
-        languages: detectLanguages(name),
+        results.push({
+          magnet: buildMagnet(hash, name),
+          name, quality: parseQuality(name),
+          size: sizeText || "Unknown",
+          seeds, peers,
+          source: "LimeTorrents",
+          languages: detectLanguages(name),
+        });
       });
-    });
 
-    return results.sort((a, b) => b.seeds - a.seeds);
-  } catch (err) {
-    console.error("[scraper:LimeTorrents]", (err as any)?.message);
-    return [];
+      if (results.length > 0) return results.sort((a, b) => b.seeds - a.seeds);
+    } catch (err) {
+      errors.push(`${mirror}: ${(err as any)?.message}`);
+    }
   }
+  console.error("[scraper:LimeTorrents] all mirrors failed:", errors.join("; "));
+  return [];
 }
 
 // ── 1337x (cheerio + per-item magnet resolve) ──────────────────────
 
+const LEET_MIRRORS = [
+  "https://1337x.to",
+  "https://1337x.st",
+  "https://x1337x.ws",
+];
+
 async function search1337x(query: string): Promise<ScrapedTorrent[]> {
-  try {
-    const url = `https://1337x.to/search/${encodeURIComponent(query)}/1/`;
-    const res = await http.get(url, {
-      headers: { "User-Agent": UA, Accept: "text/html", "Accept-Language": "en-US,en;q=0.5", Referer: "https://www.google.com/" },
-    });
-    const $ = cheerio.load(res.data as string);
-    const items: { name: string; detailUrl: string; seeds: number; peers: number; sizeText: string }[] = [];
+  const errors: string[] = [];
+  for (const domain of LEET_MIRRORS) {
+    try {
+      const url = `${domain}/search/${encodeURIComponent(query)}/1/`;
+      const res = await http.get(url, {
+        headers: { "User-Agent": UA, Accept: "text/html", "Accept-Language": "en-US,en;q=0.5", Referer: "https://www.google.com/" },
+      });
+      const $ = cheerio.load(res.data as string);
+      const items: { name: string; detailUrl: string; seeds: number; peers: number; sizeText: string }[] = [];
 
-    $("table.table-list tbody tr").each((_i, row) => {
-      const nameEl = $(row).find("td.name a").last();
-      const name = nameEl.text().trim();
-      if (!name) return;
-      const detailLink = nameEl.attr("href") || "";
-      const fullUrl = detailLink.startsWith("http") ? detailLink : `https://1337x.to${detailLink}`;
-      const seeds = parseInt($(row).find("td.seeds").text().trim()) || 0;
-      if (seeds < 1) return;
-      const peers = parseInt($(row).find("td.leeches").text().trim()) || 0;
-      const sizeText = $(row).find("td.size").text().trim().replace(/[^\d.]+(GB|MB|KB)/i, " $1");
-      items.push({ name, detailUrl: fullUrl, seeds, peers, sizeText });
-    });
+      $("table.table-list tbody tr").each((_i, row) => {
+        const nameEl = $(row).find("td.name a").last();
+        const name = nameEl.text().trim();
+        if (!name) return;
+        const detailLink = nameEl.attr("href") || "";
+        const fullUrl = detailLink.startsWith("http") ? detailLink : `${domain}${detailLink}`;
+        const seeds = parseInt($(row).find("td.seeds").text().trim()) || 0;
+        if (seeds < 1) return;
+        const peers = parseInt($(row).find("td.leeches").text().trim()) || 0;
+        const sizeText = $(row).find("td.size").text().trim().replace(/[^\d.]+(GB|MB|KB)/i, " $1");
+        items.push({ name, detailUrl: fullUrl, seeds, peers, sizeText });
+      });
 
-    // Resolve magnets concurrently (up to 5 at a time)
-    const results: ScrapedTorrent[] = [];
-    const batchSize = 5;
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize);
-      const magnets = await Promise.allSettled(
-        batch.map((item) => resolve1337xMagnet(item.detailUrl))
-      );
-      for (let j = 0; j < batch.length; j++) {
-        const magnet = magnets[j].status === "fulfilled" ? magnets[j].value : null;
-        results.push({
-          magnet: magnet || "",
-          name: batch[j].name,
-          quality: parseQuality(batch[j].name),
-          size: batch[j].sizeText || "Unknown",
-          seeds: batch[j].seeds,
-          peers: batch[j].peers,
-          source: "1337x",
-          languages: detectLanguages(batch[j].name),
-        });
+      if (items.length === 0) continue;
+
+      // Resolve magnets concurrently (up to 5 at a time)
+      const results: ScrapedTorrent[] = [];
+      const batchSize = 5;
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const magnets = await Promise.allSettled(
+          batch.map((item) => resolve1337xMagnet(item.detailUrl))
+        );
+        for (let j = 0; j < batch.length; j++) {
+          const magnet = magnets[j].status === "fulfilled" ? magnets[j].value : null;
+          results.push({
+            magnet: magnet || "",
+            name: batch[j].name,
+            quality: parseQuality(batch[j].name),
+            size: batch[j].sizeText || "Unknown",
+            seeds: batch[j].seeds,
+            peers: batch[j].peers,
+            source: "1337x",
+            languages: detectLanguages(batch[j].name),
+          });
+        }
       }
-    }
 
-    return results.filter((r) => r.magnet).sort((a, b) => b.seeds - a.seeds);
-  } catch (err) {
-    console.error("[scraper:1337x]", (err as any)?.message);
-    return [];
+      const filtered = results.filter((r) => r.magnet).sort((a, b) => b.seeds - a.seeds);
+      if (filtered.length > 0) return filtered;
+    } catch (err) {
+      errors.push(`${domain}: ${(err as any)?.message}`);
+    }
   }
+  console.error("[scraper:1337x] all mirrors failed:", errors.join("; "));
+  return [];
 }
 
 async function resolve1337xMagnet(detailUrl: string): Promise<string | null> {
@@ -363,12 +402,12 @@ export async function searchAllV2(query: string, options: SearchOptions = {}): P
   }
 
   const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
-    { name: "YTS", scrape: searchYTS },
+    { name: "TSA", scrape: searchTSA },
     { name: "TPB", scrape: searchTPB },
+    { name: "YTS", scrape: searchYTS },
     { name: "LimeTorrents", scrape: searchLimeTorrents },
     { name: "1337x", scrape: search1337x },
     { name: "EZTV", scrape: searchEZTV },
-    { name: "TSA", scrape: searchTSA },
   ];
 
   for (const scraper of chain) {
@@ -423,12 +462,12 @@ export async function searchAllV2Debug(query: string): Promise<{
   const scrapers: Record<string, { status: string; count: number; error?: string }> = {};
 
   const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
-    { name: "YTS", scrape: searchYTS },
+    { name: "TSA", scrape: searchTSA },
     { name: "TPB", scrape: searchTPB },
+    { name: "YTS", scrape: searchYTS },
     { name: "LimeTorrents", scrape: searchLimeTorrents },
     { name: "1337x", scrape: search1337x },
     { name: "EZTV", scrape: searchEZTV },
-    { name: "TSA", scrape: searchTSA },
   ];
 
   let all: ScrapedTorrent[] = [];
