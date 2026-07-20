@@ -99,7 +99,7 @@ export default function Details() {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  onClick={() => navigate(`/watch/${type}/${numId}`)}
+                  onClick={() => navigate(`/sources/${type}/${numId}`)}
                   className="flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-bold text-black transition hover:scale-105"
                 >
                   <Play width={20} height={20} /> Watch Now

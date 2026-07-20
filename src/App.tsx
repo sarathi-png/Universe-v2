@@ -27,6 +27,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const TamilDubbed = lazy(() => import("./pages/TamilDubbed"));
 const DubmvWatch = lazy(() => import("./pages/DubmvWatch"));
+const Sources = lazy(() => import("./pages/Sources"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +78,7 @@ function AnimatedRoutes() {
           <Route path="/watchlist" element={<Page><Watchlist /></Page>} />
           <Route path="/explore" element={<Page><Explore /></Page>} />
           <Route path="/browse/tamil-dubbed" element={<Page><TamilDubbed /></Page>} />
+          <Route path="/sources/:type/:id" element={<Page><Sources /></Page>} />
           <Route path="/watch/dubmv/:fileId" element={<Page><DubmvWatch /></Page>} />
           <Route path="/dmca" element={<Page><DMCAPage /></Page>} />
           <Route path="/privacy" element={<Page><PrivacyPage /></Page>} />

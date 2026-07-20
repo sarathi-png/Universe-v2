@@ -153,7 +153,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
 
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => { navigate(`/watch/${type}/${item.id}`); onClose(); }}
+                  onClick={() => { navigate(`/sources/${type}/${item.id}`); onClose(); }}
                   className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-purple-600/30"
                 >
                   <Play width={20} height={20} className="fill-white" />

@@ -167,7 +167,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  onClick={() => navigate(`/watch/${type}/${m.id}`)}
+                  onClick={() => navigate(`/sources/${type}/${m.id}`)}
                   className="flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-bold text-black transition hover:scale-105 hover:bg-zinc-200"
                 >
                   <Play width={20} height={20} /> Play Now

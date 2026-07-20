@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { IMG, title, type MediaType } from "../api/tmdb";
 import { tmdbApi } from "../api/tmdb";
 import { mediaStreamApi, type MediaStreamSource } from "../api/stream";
@@ -23,6 +23,9 @@ export default function Watch() {
   const { type, id } = useParams<{ type: MediaType; id: string }>();
   const navigate = useNavigate();
   const numId = Number(id);
+  const [searchParams] = useSearchParams();
+  const magnetParam = searchParams.get("magnet");
+
   const { data } = useDetails(type as MediaType, numId);
   const { upsertProgress, addToHistory, toggleWatchlist, inWatchlist, targetAudioLang } = useStore();
 
@@ -47,11 +50,37 @@ export default function Watch() {
   };
   const streamLang = targetAudioLang ? LANG_CODE_MAP[targetAudioLang] || targetAudioLang.replace("_dub", "") : undefined;
 
+  const isDirectMagnet = Boolean(magnetParam);
+
+  // ── fetchSources: either from a magnet param or from the language route ──
   const fetchSources = useCallback(async () => {
     if (!numId) return;
     setLoadingSources(true);
+
+    if (magnetParam) {
+      // Direct magnet play — single source, skip API calls
+      setSources([{
+        url: `/api/torrent/play?magnet=${encodeURIComponent(magnetParam)}`,
+        directUrl: null,
+        name: "Torrent Stream",
+        provider: "Torrent",
+        quality: "Auto",
+        languages: ["en"],
+        isEmbed: false,
+        playUrl: null,
+      }]);
+      sourcesLenRef.current = 1;
+      setSubtitles([]);
+      setSourceIdx(0);
+      sourceIdxRef.current = 0;
+      setPlayerKey((k) => k + 1);
+      setFailoverMsg("");
+      setLoadingSources(false);
+      return;
+    }
+
+    // No magnet — fetch existing embed/direct sources
     try {
-      // Fetch existing embed/direct sources
       const result = await mediaStreamApi.getStream(
         numId, type as "movie" | "tv",
         type === "tv" ? season : undefined,
@@ -59,37 +88,8 @@ export default function Watch() {
         streamLang
       );
 
-      // Build combined sources list – start with existing
-      let combined: MediaStreamSource[] = [...result.sources];
-
-      // Also search torrents by name if TMDB data is available
-      if (data) {
-        try {
-          const query = `${title(data)} ${data.release_date?.slice(0, 4) || ""}`;
-          const torrentRes = await mediaStreamApi.searchV2(query, {
-            quality: streamLang ? "all" : "1080p",
-            lang: streamLang || "all",
-            limit: 4,
-          });
-          const torrentSources: MediaStreamSource[] = (torrentRes.results || []).map((t: any) => ({
-            url: `/api/torrent/play?magnet=${encodeURIComponent(t.magnet)}`,
-            directUrl: null,
-            name: t.name,
-            provider: "Torrent",
-            quality: t.quality || "Unknown",
-            languages: t.languages || ["en"],
-            isEmbed: false,
-            playUrl: null,
-          }));
-          // Prepend torrent sources (preferred over embeds)
-          combined = [...torrentSources, ...combined];
-        } catch {
-          // Torrent search is optional; keep existing sources
-        }
-      }
-
-      setSources(combined);
-      sourcesLenRef.current = combined.length;
+      setSources(result.sources);
+      sourcesLenRef.current = result.sources.length;
       setSubtitles(
         result.subtitles.map((s, i) => ({
           id: i,
@@ -107,7 +107,7 @@ export default function Watch() {
       setFailoverMsg("Failed to load sources. Try again later.");
     }
     setLoadingSources(false);
-  }, [numId, type, season, episode, streamLang, data]);
+  }, [numId, type, season, episode, streamLang, magnetParam]);
 
   useEffect(() => {
     fetchSources();
@@ -279,6 +279,12 @@ export default function Watch() {
                     {sourceIdx + 1} / {sources.length}
                   </span>
                 )}
+                <button
+                  onClick={() => navigate(`/sources/${type}/${numId}`)}
+                  className="ml-auto flex items-center gap-1 text-xs font-semibold text-violet-400 transition hover:text-violet-300"
+                >
+                  {isDirectMagnet ? "Other torrents" : "Torrent sources"}
+                </button>
               </div>
 
               {data && (

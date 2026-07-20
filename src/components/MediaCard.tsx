@@ -33,7 +33,7 @@ export default function MediaCard({ item, rank }: Props) {
   const open = () => navigate(`/title/${type}/${item.id}`);
   const watch = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/watch/${type}/${item.id}`);
+    navigate(`/sources/${type}/${item.id}`);
   };
 
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
