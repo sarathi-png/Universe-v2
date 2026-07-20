@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { searchByName } from "../services/torrentManager.js";
+import { searchAllV2Debug } from "../services/scrapers.js";
 
 export const searchV2Router = Router();
 
@@ -34,4 +35,15 @@ searchV2Router.get("/", async (req, res) => {
     console.error("[searchV2] Error:", err);
     res.status(500).json({ error: "Search failed", message: err.message });
   }
+});
+
+// Debug endpoint: shows per-scraper status
+searchV2Router.get("/debug", async (req, res) => {
+  const q = (req.query.q as string || "").trim();
+  if (!q) {
+    res.status(400).json({ error: 'Missing "q" parameter' });
+    return;
+  }
+  const result = await searchAllV2Debug(q);
+  res.json(result);
 });

@@ -76,21 +76,20 @@ function formatSize(bytes: number): string {
   return `${size.toFixed(1)} ${units[i]}`;
 }
 
-function parseSize(str: string): string {
-  const m = str.trim().match(/^([\d.]+)\s*(GB|MB|KB|TB)/i);
-  if (!m) return "Unknown";
-  return `${m[1]} ${m[2].toUpperCase()}`;
-}
-
 function extractHash(magnet: string): string | null {
   if (!magnet) return null;
   const m = magnet.match(/btih:([a-fA-F0-9]{40})/);
   return m ? m[1].toLowerCase() : null;
 }
 
-// ── YTS API ──────────────────────────────────────────────────────
+function qualityRank(q: string): number {
+  const ranks: Record<string, number> = { "4K": 5, "2160p": 5, "1080p": 4, "720p": 3, "480p": 2, "360p": 1 };
+  return ranks[q] || 0;
+}
 
-export async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
+// ── YTS API (movie-only) ───────────────────────────────────────────
+
+async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
   try {
     const url = `https://yts.mx/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&sort_by=seeders&limit=30`;
     const { data } = await http.get(url);
@@ -108,11 +107,9 @@ export async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
         if (!t.hash) continue;
         results.push({
           magnet: buildMagnet(t.hash, name),
-          name,
-          quality,
+          name, quality,
           size: t.size || "Unknown",
-          seeds: t.seeds || 0,
-          peers: t.peers || 0,
+          seeds: t.seeds || 0, peers: t.peers || 0,
           source: "YTS",
           languages: detectLanguages(title),
           poster: movie.large_cover_image || movie.medium_cover_image || "",
@@ -121,14 +118,45 @@ export async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
       }
     }
     return results;
-  } catch {
+  } catch (err) {
+    console.error("[scraper:YTS]", (err as any)?.message);
     return [];
   }
 }
 
-// ── LimeTorrents ─────────────────────────────────────────────────
+// ── TPB (apibay, API-based) ────────────────────────────────────────
 
-export async function scrapeLimeTorrents(query: string): Promise<ScrapedTorrent[]> {
+async function searchTPB(query: string): Promise<ScrapedTorrent[]> {
+  try {
+    const url = `https://apibay.org/q.php?q=${encodeURIComponent(query)}&cat=201`;
+    const res = await http.get(url);
+    const data = res.data as any[];
+    if (!Array.isArray(data)) return [];
+
+    const seen = new Set<string>();
+    return data
+      .filter((t: any) => t.info_hash && t.name && !seen.has(t.info_hash) && seen.add(t.info_hash))
+      .filter((t: any) => Number(t.seeders) > 0)
+      .map((t: any) => ({
+        magnet: buildMagnet(t.info_hash, t.name),
+        name: t.name,
+        quality: parseQuality(t.name),
+        size: formatSize(Number(t.size) || 0),
+        seeds: Number(t.seeders) || 0,
+        peers: Number(t.leechers) || 0,
+        source: "TPB",
+        languages: detectLanguages(t.name),
+      }))
+      .sort((a, b) => b.seeds - a.seeds);
+  } catch (err) {
+    console.error("[scraper:TPB]", (err as any)?.message);
+    return [];
+  }
+}
+
+// ── LimeTorrents (cheerio) ─────────────────────────────────────────
+
+async function searchLimeTorrents(query: string): Promise<ScrapedTorrent[]> {
   try {
     const url = `https://www.limetorrents.fun/search/all/${encodeURIComponent(query)}/`;
     const res = await http.get(url, { headers: { "User-Agent": UA } });
@@ -151,32 +179,31 @@ export async function scrapeLimeTorrents(query: string): Promise<ScrapedTorrent[
 
       results.push({
         magnet: buildMagnet(hash, name),
-        name,
-        quality: parseQuality(name),
-        size: parseSize(sizeText),
-        seeds,
-        peers,
+        name, quality: parseQuality(name),
+        size: sizeText || "Unknown",
+        seeds, peers,
         source: "LimeTorrents",
         languages: detectLanguages(name),
       });
     });
 
     return results.sort((a, b) => b.seeds - a.seeds);
-  } catch {
+  } catch (err) {
+    console.error("[scraper:LimeTorrents]", (err as any)?.message);
     return [];
   }
 }
 
-// ── 1337x ────────────────────────────────────────────────────────
+// ── 1337x (cheerio + per-item magnet resolve) ──────────────────────
 
-export async function scrape1337x(query: string): Promise<ScrapedTorrent[]> {
+async function search1337x(query: string): Promise<ScrapedTorrent[]> {
   try {
     const url = `https://1337x.to/search/${encodeURIComponent(query)}/1/`;
     const res = await http.get(url, {
       headers: { "User-Agent": UA, Accept: "text/html", "Accept-Language": "en-US,en;q=0.5", Referer: "https://www.google.com/" },
     });
     const $ = cheerio.load(res.data as string);
-    const results: ScrapedTorrent[] = [];
+    const items: { name: string; detailUrl: string; seeds: number; peers: number; sizeText: string }[] = [];
 
     $("table.table-list tbody tr").each((_i, row) => {
       const nameEl = $(row).find("td.name a").last();
@@ -185,79 +212,137 @@ export async function scrape1337x(query: string): Promise<ScrapedTorrent[]> {
       const detailLink = nameEl.attr("href") || "";
       const fullUrl = detailLink.startsWith("http") ? detailLink : `https://1337x.to${detailLink}`;
       const seeds = parseInt($(row).find("td.seeds").text().trim()) || 0;
+      if (seeds < 1) return;
       const peers = parseInt($(row).find("td.leeches").text().trim()) || 0;
       const sizeText = $(row).find("td.size").text().trim().replace(/[^\d.]+(GB|MB|KB)/i, " $1");
-      if (seeds < 1) return;
-
-      results.push({
-        magnet: "",
-        name,
-        quality: parseQuality(name),
-        size: sizeText || "Unknown",
-        seeds,
-        peers,
-        source: "1337x",
-        languages: detectLanguages(name),
-      });
-
-      pendingMagnetUrls.set(fullUrl, results.length - 1);
+      items.push({ name, detailUrl: fullUrl, seeds, peers, sizeText });
     });
 
-    return results;
-  } catch {
+    // Resolve magnets concurrently (up to 5 at a time)
+    const results: ScrapedTorrent[] = [];
+    const batchSize = 5;
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const magnets = await Promise.allSettled(
+        batch.map((item) => resolve1337xMagnet(item.detailUrl))
+      );
+      for (let j = 0; j < batch.length; j++) {
+        const magnet = magnets[j].status === "fulfilled" ? magnets[j].value : null;
+        results.push({
+          magnet: magnet || "",
+          name: batch[j].name,
+          quality: parseQuality(batch[j].name),
+          size: batch[j].sizeText || "Unknown",
+          seeds: batch[j].seeds,
+          peers: batch[j].peers,
+          source: "1337x",
+          languages: detectLanguages(batch[j].name),
+        });
+      }
+    }
+
+    return results.filter((r) => r.magnet).sort((a, b) => b.seeds - a.seeds);
+  } catch (err) {
+    console.error("[scraper:1337x]", (err as any)?.message);
     return [];
   }
 }
 
-const pendingMagnetUrls = new Map<string, number>();
-
-export async function resolve1337xMagnets(results: ScrapedTorrent[]): Promise<ScrapedTorrent[]> {
-  const updated = [...results];
-  const batch = Array.from(pendingMagnetUrls.entries());
-  pendingMagnetUrls.clear();
-  for (const [detailUrl, idx] of batch) {
-    try {
-      const res = await http.get(detailUrl, {
-        headers: { "User-Agent": UA, Accept: "text/html", Referer: "https://1337x.to/" },
-      });
-      const $ = cheerio.load(res.data as string);
-      const magnet = $('a[href^="magnet:"]').attr("href");
-      if (magnet) updated[idx] = { ...updated[idx], magnet };
-    } catch {}
-  }
-  return updated.filter((t) => t.magnet);
-}
-
-// ── TPB ──────────────────────────────────────────────────────────
-
-export async function scrapeTPB(query: string): Promise<ScrapedTorrent[]> {
+async function resolve1337xMagnet(detailUrl: string): Promise<string | null> {
   try {
-    const url = `https://apibay.org/q.php?q=${encodeURIComponent(query)}&cat=201`;
-    const res = await http.get(url);
-    const data = res.data as any[];
-    if (!Array.isArray(data)) return [];
-
-    const seen = new Set<string>();
-    return data
-      .filter((t: any) => t.info_hash && t.name && !seen.has(t.info_hash) && seen.add(t.info_hash))
-      .filter((t: any) => Number(t.seeders) > 0)
-      .map((t: any) => ({
-        magnet: buildMagnet(t.info_hash, t.name),
-        name: t.name,
-        quality: parseQuality(t.name),
-        size: formatSize(Number(t.size) || 0),
-        seeds: Number(t.seeders) || 0,
-        peers: Number(t.leechers) || 0,
-        source: "TPB",
-        languages: detectLanguages(t.name),
-      }))
-      .sort((a, b) => b.seeds - a.seeds);
+    const res = await http.get(detailUrl, {
+      headers: { "User-Agent": UA, Accept: "text/html", Referer: "https://1337x.to/" },
+    });
+    const $ = cheerio.load(res.data as string);
+    return $('a[href^="magnet:"]').attr("href") || null;
   } catch {
+    return null;
+  }
+}
+
+// ── EZTV API (TV-focused) ──────────────────────────────────────────
+
+async function searchEZTV(query: string): Promise<ScrapedTorrent[]> {
+  try {
+    const url = `https://eztv.re/api/get-torrents?imdb_id=-1&limit=30&search=${encodeURIComponent(query)}`;
+    const res = await http.get(url);
+    const data = res.data as any;
+    const torrents: any[] = data?.torrents;
+    if (!Array.isArray(torrents)) return [];
+
+    return torrents
+      .filter((t: any) => t.seeds > 0)
+      .map((t: any) => ({
+        magnet: t.magnet_url || "",
+        name: t.title || t.filename || "",
+        quality: parseQuality(t.title || ""),
+        size: t.size_bytes ? formatSize(t.size_bytes) : (t.size || "Unknown"),
+        seeds: t.seeds || 0,
+        peers: t.peers || 0,
+        source: "EZTV",
+        languages: detectLanguages(t.title || ""),
+        year: "",
+      }))
+      .filter((t: any) => t.magnet)
+      .sort((a: any, b: any) => b.seeds - a.seeds);
+  } catch (err) {
+    console.error("[scraper:EZTV]", (err as any)?.message);
     return [];
   }
 }
 
-// ── Aggregation (v2 multi-source) ────────────────────────────────
+// ── torrent-search-api (npm package, 13 providers) ─────────────────
+
+let tsaLoaded = false;
+let tsaProviders: string[] = [];
+
+async function searchTSA(query: string): Promise<ScrapedTorrent[]> {
+  try {
+    if (!tsaLoaded) {
+      const mod = await import("torrent-search-api");
+      const TSA = mod.default || mod;
+      TSA.enableProvider("ThePirateBay");
+      TSA.enableProvider("1337x");
+      TSA.enableProvider("Limetorrents");
+      TSA.enableProvider("Eztv");
+      TSA.enableProvider("KickassTorrents");
+      TSA.enableProvider("Rarbg");
+      TSA.enableProvider("Torrent9");
+      tsaProviders = TSA.getActiveProviders();
+      tsaLoaded = true;
+      console.log(`[scraper:TSA] loaded ${tsaProviders.length} providers: ${tsaProviders.join(", ")}`);
+    }
+
+    const results = await httpGetJsonFallback(query);
+    return results;
+  } catch (err) {
+    console.error("[scraper:TSA]", (err as any)?.message);
+    return [];
+  }
+}
+
+async function httpGetJsonFallback(query: string): Promise<ScrapedTorrent[]> {
+  const mod = await import("torrent-search-api");
+  const TSA = mod.default || mod;
+  const raw = await TSA.search(query, "Video", 15);
+
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((t: any) => t.seeds > 0 && t.magnet)
+    .map((t: any) => ({
+      magnet: t.magnet,
+      name: t.title || t.name || "",
+      quality: parseQuality(t.title || t.name || ""),
+      size: t.size || "Unknown",
+      seeds: t.seeds || 0,
+      peers: t.peers || 0,
+      source: t.provider || "TSA",
+      languages: detectLanguages(t.title || t.name || ""),
+    }))
+    .sort((a: any, b: any) => b.seeds - a.seeds);
+}
+
+// ── Sequential fallback chain ──────────────────────────────────────
 
 export interface SearchOptions {
   quality?: string;
@@ -265,6 +350,10 @@ export interface SearchOptions {
   limit?: number;
 }
 
+/**
+ * Try providers in priority order, stop at the first that returns results.
+ * Chain: YTS → TPB → LimeTorrents → 1337x → EZTV → torrent-search-api
+ */
 export async function searchAllV2(query: string, options: SearchOptions = {}): Promise<ScrapedTorrent[]> {
   const { quality, lang, limit = 30 } = options;
 
@@ -273,23 +362,34 @@ export async function searchAllV2(query: string, options: SearchOptions = {}): P
     searchQuery = `${query} ${quality}`;
   }
 
-  const [yts, lime, leet, tpb] = await Promise.allSettled([
-    searchYTS(searchQuery),
-    scrapeLimeTorrents(searchQuery),
-    scrape1337x(searchQuery),
-    scrapeTPB(searchQuery),
-  ]);
+  const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
+    { name: "YTS", scrape: searchYTS },
+    { name: "TPB", scrape: searchTPB },
+    { name: "LimeTorrents", scrape: searchLimeTorrents },
+    { name: "1337x", scrape: search1337x },
+    { name: "EZTV", scrape: searchEZTV },
+    { name: "TSA", scrape: searchTSA },
+  ];
 
-  const all: ScrapedTorrent[] = [];
-  if (yts.status === "fulfilled") all.push(...yts.value);
-  if (lime.status === "fulfilled") all.push(...lime.value);
-  if (tpb.status === "fulfilled") all.push(...tpb.value);
-
-  if (leet.status === "fulfilled" && leet.value.length > 0) {
-    const resolved = await resolve1337xMagnets(leet.value);
-    all.push(...resolved);
+  for (const scraper of chain) {
+    console.log(`[searchV2] Trying ${scraper.name}...`);
+    const results = await scraper.scrape(searchQuery);
+    if (results.length > 0) {
+      console.log(`[searchV2] ${scraper.name} returned ${results.length} results — stopping chain`);
+      return applyFilters(results, quality, lang, limit);
+    }
+    console.log(`[searchV2] ${scraper.name} returned 0 — falling through`);
   }
 
+  return [];
+}
+
+function applyFilters(
+  all: ScrapedTorrent[],
+  quality?: string,
+  lang?: string,
+  limit?: number
+): ScrapedTorrent[] {
   const seen = new Set<string>();
   let filtered = all.filter((t) => {
     const hash = extractHash(t.magnet);
@@ -313,32 +413,61 @@ export async function searchAllV2(query: string, options: SearchOptions = {}): P
   return filtered.slice(0, limit);
 }
 
-function qualityRank(q: string): number {
-  const ranks: Record<string, number> = { "4K": 5, "2160p": 5, "1080p": 4, "720p": 3, "480p": 2, "360p": 1 };
-  return ranks[q] || 0;
+// ── Debug: return per-scraper status ───────────────────────────────
+
+export async function searchAllV2Debug(query: string): Promise<{
+  query: string;
+  scrapers: Record<string, { status: string; count: number; error?: string }>;
+  total: number;
+}> {
+  const scrapers: Record<string, { status: string; count: number; error?: string }> = {};
+
+  const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
+    { name: "YTS", scrape: searchYTS },
+    { name: "TPB", scrape: searchTPB },
+    { name: "LimeTorrents", scrape: searchLimeTorrents },
+    { name: "1337x", scrape: search1337x },
+    { name: "EZTV", scrape: searchEZTV },
+    { name: "TSA", scrape: searchTSA },
+  ];
+
+  let all: ScrapedTorrent[] = [];
+  for (const scraper of chain) {
+    try {
+      const results = await scraper.scrape(query);
+      scrapers[scraper.name] = { status: "fulfilled", count: results.length };
+      all.push(...results);
+    } catch (err: any) {
+      scrapers[scraper.name] = { status: "rejected", count: 0, error: err.message };
+    }
+  }
+
+  const seen = new Set<string>();
+  all = all.filter((t) => {
+    const hash = extractHash(t.magnet);
+    if (!hash || seen.has(hash)) return false;
+    seen.add(hash);
+    return true;
+  });
+
+  return { query, scrapers, total: all.length };
 }
 
-// ── Original aggregation (backward compat) ───────────────────────
+// ── Original aggregation (backward compat) ─────────────────────────
 
 export async function searchAllTorrents(query: string, year?: string): Promise<ScrapedTorrent[]> {
   const yearFiltered = year ? `${query} ${year}` : query;
 
   const [lime, tpb, leet] = await Promise.allSettled([
-    scrapeLimeTorrents(yearFiltered),
-    scrapeTPB(query),
-    scrape1337x(yearFiltered),
+    searchLimeTorrents(yearFiltered),
+    searchTPB(query),
+    search1337x(yearFiltered),
   ]);
 
   const all: ScrapedTorrent[] = [];
   if (lime.status === "fulfilled") all.push(...lime.value);
   if (tpb.status === "fulfilled") all.push(...tpb.value);
-
-  if (leet.status === "fulfilled" && leet.value.length > 0) {
-    const resolved = await resolve1337xMagnets(leet.value);
-    all.push(...resolved);
-  } else {
-    all.push(...(leet.status === "fulfilled" ? leet.value.filter((t) => t.magnet) : []));
-  }
+  if (leet.status === "fulfilled") all.push(...leet.value);
 
   const seen = new Set<string>();
   return all
