@@ -8,6 +8,7 @@ import { languageRouter } from "./routes/language.js";
 import { torrentRouter } from "./routes/torrent.js";
 import { dubmvRouter } from "./routes/dubmv.js";
 import { searchV2Router } from "./routes/searchV2.js";
+import { tamilmvRouter } from "./routes/tamilmv.js";
 import { KeepWarm } from "./lib/keep-warm.js";
 
 // Prevent WebTorrent microtask crashes from killing the server (Node v24 compat)
@@ -52,6 +53,7 @@ app.use("/api/language", languageRouter);
 app.use("/api/torrent", torrentRouter);
 app.use("/api/dubmv", dubmvRouter);
 app.use("/api/search/v2", searchV2Router);
+app.use("/api/tamilmv", tamilmvRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", version: "2.0.0", timestamp: Date.now() });
