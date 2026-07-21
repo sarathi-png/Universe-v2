@@ -944,6 +944,14 @@
     "lastScanned": 1780585692016,
     "files": []
   },
+  "261639": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "ja",
+    "lastScanned": 1784645852492,
+    "files": []
+  },
   "269955": {
     "languages": [
       "en"
@@ -1404,43 +1412,11 @@
   },
   "687163": {
     "languages": [
-      "en",
-      "ta"
+      "en"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780718427774,
-    "files": [
-      {
-        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FProject%2520Hail%2520Mary%2520(2026)%2F%2Fmovies%2FProject%2520Hail%2520Mary%2520%25282026%2529%2FProject.Hail.Mary.2026.1080p.10bit.WEBRip.6CH.x265.HEVC-PSA.mkv",
-        "directUrl": "https://a.111477.xyz/movies/Project%20Hail%20Mary%20(2026)//movies/Project%20Hail%20Mary%20%282026%29/Project.Hail.Mary.2026.1080p.10bit.WEBRip.6CH.x265.HEVC-PSA.mkv",
-        "name": "Project.Hail.Mary.2026.1080p.10bit.WEBRip.6CH.x265.HEVC-PSA.mkv"
-      },
-      {
-        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FProject%2520Hail%2520Mary%2520(2026)%2F%2Fmovies%2FProject%2520Hail%2520Mary%2520%25282026%2529%2FProject.Hail.Mary.2026.1080p.DS4K.Webrip.x265.10bit.EAC3.5.1.Atmos-DNU-TAoE.mkv",
-        "directUrl": "https://a.111477.xyz/movies/Project%20Hail%20Mary%20(2026)//movies/Project%20Hail%20Mary%20%282026%29/Project.Hail.Mary.2026.1080p.DS4K.Webrip.x265.10bit.EAC3.5.1.Atmos-DNU-TAoE.mkv",
-        "name": "Project.Hail.Mary.2026.1080p.DS4K.Webrip.x265.10bit.EAC3.5.1.Atmos-DNU-TAoE.mkv"
-      },
-      {
-        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FProject%2520Hail%2520Mary%2520(2026)%2F%2Fmovies%2FProject%2520Hail%2520Mary%2520%25282026%2529%2FProject.Hail.Mary.2026.1080p.WEB-DL.AAC.2.0.H264-EaZy.mkv",
-        "directUrl": "https://a.111477.xyz/movies/Project%20Hail%20Mary%20(2026)//movies/Project%20Hail%20Mary%20%282026%29/Project.Hail.Mary.2026.1080p.WEB-DL.AAC.2.0.H264-EaZy.mkv",
-        "name": "Project.Hail.Mary.2026.1080p.WEB-DL.AAC.2.0.H264-EaZy.mkv"
-      },
-      {
-        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FProject%2520Hail%2520Mary%2520(2026)%2F%2Fmovies%2FProject%2520Hail%2520Mary%2520%25282026%2529%2FProject.Hail.Mary.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv",
-        "directUrl": "https://a.111477.xyz/movies/Project%20Hail%20Mary%20(2026)//movies/Project%20Hail%20Mary%20%282026%29/Project.Hail.Mary.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv",
-        "name": "Project.Hail.Mary.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv"
-      },
-      {
-        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FProject%2520Hail%2520Mary%2520(2026)%2F%2Fmovies%2FProject%2520Hail%2520Mary%2520%25282026%2529%2FProject.Hail.Mary.2026.1080p.WEB.AC3.H.264-LiNEAUDIO.mkv",
-        "directUrl": "https://a.111477.xyz/movies/Project%20Hail%20Mary%20(2026)//movies/Project%20Hail%20Mary%20%282026%29/Project.Hail.Mary.2026.1080p.WEB.AC3.H.264-LiNEAUDIO.mkv",
-        "name": "Project.Hail.Mary.2026.1080p.WEB.AC3.H.264-LiNEAUDIO.mkv"
-      },
-      {
-        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FProject%2520Hail%2520Mary%2520(2026)%2F%2Fmovies%2FProject%2520Hail%2520Mary%2520%25282026%2529%2FProject.Hail.Mary.2026.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.H.265-BYNDR.mkv",
-        "directUrl": "https://a.111477.xyz/movies/Project%20Hail%20Mary%20(2026)//movies/Project%20Hail%20Mary%20%282026%29/Project.Hail.Mary.2026.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.H.265-BYNDR.mkv",
-        "name": "Project.Hail.Mary.2026.2160p.iT.WEB-DL.DDP5.1.Atmos.DV.H.265-BYNDR.mkv"
-      }
-    ]
+    "lastScanned": 1784645848186,
+    "files": []
   },
   "744275": {
     "languages": [
@@ -1769,12 +1745,20 @@
     "lastScanned": 1780718432940,
     "files": []
   },
+  "1081003": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "en",
+    "lastScanned": 1784645847941,
+    "files": []
+  },
   "1083381": {
     "languages": [
       "en"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780718432875,
+    "lastScanned": 1784645848363,
     "files": []
   },
   "1083637": {
@@ -1895,6 +1879,21 @@
       }
     ]
   },
+  "1084244": {
+    "languages": [
+      "en",
+      "te"
+    ],
+    "originalLanguage": "en",
+    "lastScanned": 1784645847744,
+    "files": [
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FToy%2520Story%25205%2520(2026)%2F%2Fmovies%2FToy%2520Story%25205%2520%25282026%2529%2FToy.Story.5.2026.1080p.DCPRIP.LTE.x264-SPLiCE.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Toy%20Story%205%20(2026)//movies/Toy%20Story%205%20%282026%29/Toy.Story.5.2026.1080p.DCPRIP.LTE.x264-SPLiCE.mkv",
+        "name": "Toy.Story.5.2026.1080p.DCPRIP.LTE.x264-SPLiCE.mkv"
+      }
+    ]
+  },
   "1093966": {
     "languages": [
       "en",
@@ -1924,6 +1923,14 @@
     ],
     "originalLanguage": "en",
     "lastScanned": 1780574922988,
+    "files": []
+  },
+  "1108427": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "en",
+    "lastScanned": 1784645850470,
     "files": []
   },
   "1110034": {
@@ -1959,6 +1966,22 @@
         "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FIn%2520the%2520Grey%2520(2026)%2F%2Fmovies%2FIn%2520the%2520Grey%2520%25282026%2529%2FIn.the.Grey.2026.1080p.WEB.h264-GRACE.mkv",
         "directUrl": "https://a.111477.xyz/movies/In%20the%20Grey%20(2026)//movies/In%20the%20Grey%20%282026%29/In.the.Grey.2026.1080p.WEB.h264-GRACE.mkv",
         "name": "In.the.Grey.2026.1080p.WEB.h264-GRACE.mkv"
+      }
+    ]
+  },
+  "1127384": {
+    "languages": [
+      "de",
+      "en",
+      "te"
+    ],
+    "originalLanguage": "en",
+    "lastScanned": 1784645851240,
+    "files": [
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FDeep%2520Water%2520(2026)%2F%2Fmovies%2FDeep%2520Water%2520%25282026%2529%2Fdeep.water.2026.720p.x265.10bit-vrc.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Deep%20Water%20(2026)//movies/Deep%20Water%20%282026%29/deep.water.2026.720p.x265.10bit-vrc.mkv",
+        "name": "deep.water.2026.720p.x265.10bit-vrc.mkv"
       }
     ]
   },
@@ -2066,7 +2089,7 @@
       "en"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780718428032,
+    "lastScanned": 1784645850072,
     "files": []
   },
   "1233413": {
@@ -2187,18 +2210,48 @@
   },
   "1273221": {
     "languages": [
-      "en"
+      "de",
+      "en",
+      "te"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780669119433,
-    "files": []
+    "lastScanned": 1784645847786,
+    "files": [
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FScary%2520Movie%2520(2026)%2F%2Fmovies%2FScary%2520Movie%2520%25282026%2529%2FScary.Movie.Extended.Cut.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Scary%20Movie%20(2026)//movies/Scary%20Movie%20%282026%29/Scary.Movie.Extended.Cut.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv",
+        "name": "Scary.Movie.Extended.Cut.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv"
+      }
+    ]
   },
   "1275779": {
     "languages": [
       "en"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780497178764,
+    "lastScanned": 1784645848058,
+    "files": [
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FDisclosure%2520Day%2520(2026)%2F%2Fmovies%2FDisclosure%2520Day%2520%25282026%2529%2FDisclosure%2520Day%2520%25282026%2529%2520%25281080p%2520iT%2520WEB-DL%2520H265%2520SDR%2520DDP%2520Atmos%25205.1%2520English%2520-%2520HONE%2529.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Disclosure%20Day%20(2026)//movies/Disclosure%20Day%20%282026%29/Disclosure%20Day%20%282026%29%20%281080p%20iT%20WEB-DL%20H265%20SDR%20DDP%20Atmos%205.1%20English%20-%20HONE%29.mkv",
+        "name": "Disclosure Day (2026) (1080p iT WEB-DL H265 SDR DDP Atmos 5.1 English - HONE).mkv"
+      }
+    ]
+  },
+  "1280738": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "zh",
+    "lastScanned": 1784645848369,
+    "files": []
+  },
+  "1285366": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "ja",
+    "lastScanned": 1784645848354,
     "files": []
   },
   "1285959": {
@@ -2348,7 +2401,15 @@
       "en"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780585685174,
+    "lastScanned": 1784645847933,
+    "files": []
+  },
+  "1315772": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "en",
+    "lastScanned": 1784645852252,
     "files": []
   },
   "1316092": {
@@ -2365,6 +2426,14 @@
     ],
     "originalLanguage": "en",
     "lastScanned": 1780669116982,
+    "files": []
+  },
+  "1318621": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "en",
+    "lastScanned": 1784645852412,
     "files": []
   },
   "1320660": {
@@ -2406,11 +2475,48 @@
   },
   "1339713": {
     "languages": [
-      "en"
+      "en",
+      "es",
+      "hi",
+      "kn",
+      "ml",
+      "ta",
+      "te"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780718428723,
-    "files": []
+    "lastScanned": 1784645847774,
+    "files": [
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FObsession%2520(2026)%2F%2Fmovies%2FObsession%2520%25282026%2529%2FObsession.2025.NORDiC.1080p.WEB-DL.H.264-NORViNE.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Obsession%20(2026)//movies/Obsession%20%282026%29/Obsession.2025.NORDiC.1080p.WEB-DL.H.264-NORViNE.mkv",
+        "name": "Obsession.2025.NORDiC.1080p.WEB-DL.H.264-NORViNE.mkv"
+      },
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FObsession%2520(2026)%2F%2Fmovies%2FObsession%2520%25282026%2529%2FObsession.2026.1080p.AMZN.WEB-DL.DDP5.1.H.264-KyoGo.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Obsession%20(2026)//movies/Obsession%20%282026%29/Obsession.2026.1080p.AMZN.WEB-DL.DDP5.1.H.264-KyoGo.mkv",
+        "name": "Obsession.2026.1080p.AMZN.WEB-DL.DDP5.1.H.264-KyoGo.mkv"
+      },
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FObsession%2520(2026)%2F%2Fmovies%2FObsession%2520%25282026%2529%2FObsession.2026.1080p.DS4K.WEBRip.10bit.DDP5.1.Atmos.x265-NeoNoir.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Obsession%20(2026)//movies/Obsession%20%282026%29/Obsession.2026.1080p.DS4K.WEBRip.10bit.DDP5.1.Atmos.x265-NeoNoir.mkv",
+        "name": "Obsession.2026.1080p.DS4K.WEBRip.10bit.DDP5.1.Atmos.x265-NeoNoir.mkv"
+      },
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FObsession%2520(2026)%2F%2Fmovies%2FObsession%2520%25282026%2529%2FObsession.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Obsession%20(2026)//movies/Obsession%20%282026%29/Obsession.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv",
+        "name": "Obsession.2026.1080p.WEB-DL.HEVC.x265.5.1-BONE.mkv"
+      },
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FObsession%2520(2026)%2F%2Fmovies%2FObsession%2520%25282026%2529%2FObsession.2026.BluRay.1080p.DDP.Atmos.5.1.x264-hallowed.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Obsession%20(2026)//movies/Obsession%20%282026%29/Obsession.2026.BluRay.1080p.DDP.Atmos.5.1.x264-hallowed.mkv",
+        "name": "Obsession.2026.BluRay.1080p.DDP.Atmos.5.1.x264-hallowed.mkv"
+      },
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FObsession%2520(2026)%2F%2Fmovies%2FObsession%2520%25282026%2529%2FObsession.2026.REPACK.MULTi.HDR.2160p.WEB.H265-FW.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Obsession%20(2026)//movies/Obsession%20%282026%29/Obsession.2026.REPACK.MULTi.HDR.2160p.WEB.H265-FW.mkv",
+        "name": "Obsession.2026.REPACK.MULTi.HDR.2160p.WEB.H265-FW.mkv"
+      }
+    ]
   },
   "1367220": {
     "languages": [
@@ -2422,10 +2528,25 @@
   },
   "1368314": {
     "languages": [
+      "en",
+      "es"
+    ],
+    "originalLanguage": "en",
+    "lastScanned": 1784645848173,
+    "files": [
+      {
+        "url": "https://p.111477.xyz/bulk?u=https%3A%2F%2Fa.111477.xyz%2Fmovies%2FPassenger%2520(2026)%2F%2Fmovies%2FPassenger%2520%25282026%2529%2FEl%2520Pasajero%2520Nocturno-2026-Bluray%25201080p-Esp.mkv",
+        "directUrl": "https://a.111477.xyz/movies/Passenger%20(2026)//movies/Passenger%20%282026%29/El%20Pasajero%20Nocturno-2026-Bluray%201080p-Esp.mkv",
+        "name": "El Pasajero Nocturno-2026-Bluray 1080p-Esp.mkv"
+      }
+    ]
+  },
+  "1368337": {
+    "languages": [
       "en"
     ],
     "originalLanguage": "en",
-    "lastScanned": 1780585693678,
+    "lastScanned": 1784645849649,
     "files": []
   },
   "1368881": {
@@ -2689,7 +2810,7 @@
       "en"
     ],
     "originalLanguage": "ru",
-    "lastScanned": 1780718433320,
+    "lastScanned": 1784645848374,
     "files": []
   },
   "1539104": {
@@ -2722,6 +2843,14 @@
     ],
     "originalLanguage": "en",
     "lastScanned": 1780585685611,
+    "files": []
+  },
+  "1668364": {
+    "languages": [
+      "en"
+    ],
+    "originalLanguage": "es",
+    "lastScanned": 1784645849136,
     "files": []
   },
   "1699574": {

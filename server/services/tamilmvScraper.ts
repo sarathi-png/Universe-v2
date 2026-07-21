@@ -206,78 +206,105 @@ async function getTmdbTitle(tmdbId: number, type: "movie" | "tv"): Promise<{ tit
   }
 }
 
-// ── Search 1TamilMV ──────────────────────────────────────────────
+// ── Search API types ─────────────────────────────────────────────
 
-async function search1TamilMV(query: string): Promise<{ topicId: number; slug: string; title: string; clean: string; year: number | null }[]> {
+interface SearchApiResult {
+  tid: number;
+  title: string;
+  priority: boolean;
+}
+
+interface Candidate {
+  topicId: number;
+  title: string;
+  clean: string;
+  year: number | null;
+  priority: boolean;
+}
+
+// ── Search 1TamilMV (JSON API) ────────────────────────────────────
+
+const PENALTY_PATTERNS = /\b(story|trailer|review|explanation|making|behind|scenes|teaser|soundtrack|ost|official\s*trailer)\b/i;
+
+async function search1TamilMV(query: string): Promise<Candidate[]> {
   try {
-    const searchUrl = `${BASE}/index.php?/search/&q=${encodeURIComponent(query)}&type=forums_topic`;
-    const res = await fetch(searchUrl, {
-      headers: { "User-Agent": UA, Accept: "text/html", Referer: `${BASE}/` },
+    const url = `${BASE}/search/api/search.php?q=${encodeURIComponent(query)}&page=1&sort=title_asc&direct=0&priority=0`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": UA, Accept: "application/json", Referer: `${BASE}/search/` },
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return [];
-    const html = await res.text();
-    const topicRegex = /\/forums\/topic\/(\d+)-([^"'<&]+)/g;
-    const matches = [...html.matchAll(topicRegex)];
-    if (matches.length === 0) return [];
 
-    const seen = new Set<string>();
-    const results: { topicId: number; slug: string; title: string; clean: string; year: number | null }[] = [];
-    for (const m of matches) {
-      const id = m[1];
-      if (!seen.has(id)) {
-        seen.add(id);
-        const rawSlug = m[2].replace(/&amp;/g, "&").replace(/\/+$/, "");
-        const decodedTitle = decodeURIComponent(rawSlug).replace(/-/g, " ").trim();
-        const year = extractYear(decodedTitle);
-        const clean = aggressivelyClean(decodedTitle);
-        results.push({ topicId: parseInt(id), slug: rawSlug, title: decodedTitle, clean, year });
-      }
+    const body: { results?: SearchApiResult[] } = await res.json();
+    if (!body.results || body.results.length === 0) return [];
+
+    const seen = new Set<number>();
+    const candidates: Candidate[] = [];
+
+    for (const r of body.results) {
+      if (seen.has(r.tid) || r.tid === 183) continue;
+      seen.add(r.tid);
+
+      // Skip junk topics (soundtracks, teasers, etc.)
+      if (PENALTY_PATTERNS.test(r.title)) continue;
+
+      const year = extractYear(r.title);
+      const clean = aggressivelyClean(r.title);
+
+      candidates.push({ topicId: r.tid, title: r.title, clean, year, priority: r.priority });
     }
 
-    return results.filter((c) => c.topicId !== 183 && c.slug.length > 5);
+    return candidates;
   } catch {
     return [];
   }
 }
 
+// ── Candidate selection ───────────────────────────────────────────
+
 function pickBestCandidate(
-  candidates: { topicId: number; slug: string; title: string; clean: string; year: number | null }[],
+  candidates: Candidate[],
   query: string,
   targetTmdbId?: number
-): { topicId: number; slug: string; title: string } | null {
+): { topicId: number; title: string } | null {
   if (candidates.length === 0) return null;
 
-  const qualityHints = /\b(1080p|720p|2160p|4k|bluray|blu-ray|web-dl|webdl|hdts|hdtv|predvd|dvdscr|cam|tc|x264|x265|hevc|brrip|webrip|hq)\b/i;
-  const penaltyHints = /\b(story|trailer|review|explanation|making|behind|scenes|teaser|official\s*trailer|full\s*story)\b/i;
   const queryYear = extractYear(query);
   const cleanQuery = query.replace(/[^a-z0-9\s]/gi, "").toLowerCase();
 
-  // If targetTmdbId is provided, use TetraX matching
+  // When we have a TMDB ID, try TetraX first (exact DB match)
   if (targetTmdbId) {
     for (const c of candidates) {
       const [matchedTmdbId, , score] = matchToTmdb(c.title, c.year);
       if (matchedTmdbId === targetTmdbId && score >= 0.15) {
-        return { topicId: c.topicId, slug: c.slug, title: c.title };
+        return { topicId: c.topicId, title: c.title };
       }
     }
   }
 
-  // Fallback: score candidates by Jaccard + hints + year
+  // Score every candidate by Jaccard similarity + bonuses
   let best = candidates[0];
   let bestScore = -99;
+
   for (const c of candidates) {
     let score = jaccardSimilarity(c.clean, cleanQuery);
-    if (qualityHints.test(c.title)) score += 0.2;
-    if (penaltyHints.test(c.title)) score -= 0.5;
-    if (queryYear && c.year && c.year === queryYear) score += 0.3;
+
+    // Priority (trusted releaser) — modest boost
+    if (c.priority) score += 0.15;
+
+    // Exact year match — strong signal
+    if (queryYear && c.year === queryYear) score += 0.3;
+
+    // Penalty for non-content topics that slipped through
+    if (PENALTY_PATTERNS.test(c.title)) score -= 0.5;
+
     if (score > bestScore) {
       bestScore = score;
       best = c;
     }
   }
 
-  return { topicId: best.topicId, slug: best.slug, title: best.title };
+  return { topicId: best.topicId, title: best.title };
 }
 
 // ── Scrape topic page for magnets ────────────────────────────────
@@ -374,7 +401,7 @@ export async function searchTamilmv(
   const found = pickBestCandidate(candidates, searchQuery, tmdbId);
   if (!found) return null;
 
-  const result = await scrapeTopicPage(found.topicId, found.slug);
+  const result = await scrapeTopicPage(found.topicId);
   if (!result) return null;
 
   if (!result.title) result.title = meta.title;
@@ -397,7 +424,7 @@ export async function searchQuery(query: string): Promise<TamilmvResult | null> 
   const found = pickBestCandidate(candidates, query);
   if (!found) return null;
 
-  const result = await scrapeTopicPage(found.topicId, found.slug);
+  const result = await scrapeTopicPage(found.topicId);
   if (result && !result.title) result.title = found.title;
   return result;
 }
