@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Home, Film, Tv, Compass, Bookmark } from "../components/icons";
 
 export default function MobileNav() {
@@ -19,10 +20,17 @@ export default function MobileNav() {
             <Link
               key={to}
               to={to}
-              className={`flex flex-col items-center gap-1 rounded-lg px-3 py-1 text-[10px] font-medium transition ${
-                active ? "text-violet-400" : "text-zinc-500"
+              className={`relative flex flex-col items-center gap-1 rounded-lg px-3 py-1 text-[10px] font-medium transition-colors ${
+                active ? "text-violet-400" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
+              {active && (
+                <motion.span
+                  layoutId="mobileNav"
+                  className="absolute -top-2 h-0.5 w-6 rounded-full bg-violet-500"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
               <Icon width={22} height={22} />
               {label}
             </Link>

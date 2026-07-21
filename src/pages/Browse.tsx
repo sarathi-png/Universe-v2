@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { tmdbApi, type MediaType, type MediaItem } from "../api/tmdb";
 import { useGenres } from "../hooks/queries";
 import MediaCard from "../components/MediaCard";
+import ParticleCanvas from "../components/ParticleCanvas";
 
 const LANGUAGES = [
   { code: "en", name: "English" },
@@ -106,8 +107,10 @@ export default function Browse() {
   }, [page, hasMore, loading, load]);
 
   return (
-    <div className="min-h-screen px-4 pb-24 pt-24 md:px-10">
-      <h1 className="mb-2 text-3xl font-black tracking-tight md:text-4xl">
+    <div className="relative min-h-screen px-4 pb-24 pt-24 md:px-10">
+      <ParticleCanvas className="absolute inset-0 z-0" count={40} />
+      <div className="relative z-10">
+      <h1 className="mb-2 text-3xl font-black tracking-tight md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
         {mt === "movie" ? "Movies" : "TV Shows"}
       </h1>
       <p className="mb-6 text-zinc-500">Browse thousands of titles in stunning quality.</p>
@@ -184,9 +187,9 @@ export default function Browse() {
         {filteredItems.map((item, i) => (
           <motion.div
             key={`${item.id}-${i}`}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: Math.min(i * 0.03, 0.5), ease: [0.22, 1, 0.36, 1] }}
           >
             <MediaCard item={{ ...item, media_type: mt }} />
           </motion.div>
@@ -201,6 +204,7 @@ export default function Browse() {
       </div>
       )}
       <div ref={sentinel} className="h-10" />
+      </div>
     </div>
   );
 }

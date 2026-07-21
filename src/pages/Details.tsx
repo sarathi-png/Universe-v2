@@ -13,6 +13,7 @@ import LazyImage from "../components/LazyImage";
 import Row from "../components/Row";
 import { Play, PlusIcon, Check, Star, Clock } from "../components/icons";
 import ContentRatingBadge from "../components/ContentRatingBadge";
+import ParticleCanvas from "../components/ParticleCanvas";
 
 export default function Details() {
   const { type, id } = useParams<{ type: MediaType; id: string }>();
@@ -40,8 +41,19 @@ export default function Details() {
   const reviews = data.reviews?.results?.slice(0, 4) || [];
   const runtime = data.runtime || data.episode_run_time?.[0];
 
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] } as any,
+    }),
+  };
+
   return (
-    <div className="pb-20 md:pb-10">
+    <div className="relative pb-20 md:pb-10">
+      <ParticleCanvas className="absolute inset-0 z-0" count={45} />
+      <div className="relative z-10">
         {/* Cinematic backdrop */}
       <div className="relative h-[75vh] min-h-[520px] w-full">
         <LazyImage
@@ -68,7 +80,7 @@ export default function Details() {
               transition={{ duration: 0.6 }}
               className="flex-1"
             >
-              <h1 className="mb-3 text-3xl font-black tracking-tighter text-glow md:text-6xl">
+              <h1 className="mb-3 text-3xl font-black tracking-tighter text-glow md:text-6xl" style={{ fontFamily: "var(--font-display)" }}>
                 {title(data)}
               </h1>
               {data.tagline && (
@@ -150,7 +162,10 @@ export default function Details() {
         </div>
 
         {tab === "overview" && (
-          <div className="grid gap-8 lg:grid-cols-3">
+          <motion.div
+            variants={sectionVariants} custom={0} initial="hidden" animate="visible"
+            className="grid gap-8 lg:grid-cols-3"
+          >
             <div className="lg:col-span-2">
               <p className="max-w-3xl leading-relaxed text-zinc-300">
                 {data.overview}
@@ -195,11 +210,14 @@ export default function Details() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {tab === "cast" && (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <motion.div
+            variants={sectionVariants} custom={0} initial="hidden" animate="visible"
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+          >
             {cast.map((c: any) => (
               <Link
                 key={c.id}
@@ -218,11 +236,14 @@ export default function Details() {
                 <p className="truncate text-xs text-zinc-500">{c.character}</p>
               </Link>
             ))}
-          </div>
+          </motion.div>
         )}
 
         {tab === "reviews" && (
-          <div className="grid gap-4 md:grid-cols-2">
+          <motion.div
+            variants={sectionVariants} custom={0} initial="hidden" animate="visible"
+            className="grid gap-4 md:grid-cols-2"
+          >
             {reviews.length ? (
               reviews.map((r: any) => (
                 <div key={r.id} className="glass rounded-2xl p-5">
@@ -248,7 +269,7 @@ export default function Details() {
             ) : (
               <p className="text-zinc-500">No reviews yet.</p>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -259,6 +280,7 @@ export default function Details() {
         {similar.length > 0 && (
           <Row title="More Like This" items={similar} />
         )}
+      </div>
       </div>
       </div>
   );

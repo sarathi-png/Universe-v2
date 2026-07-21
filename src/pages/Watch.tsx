@@ -289,7 +289,7 @@ export default function Watch() {
 
               {data && (
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <h1 className="text-xl font-bold md:text-2xl">{title(data)}</h1>
+                  <h1 className="text-xl font-bold md:text-2xl" style={{ fontFamily: "var(--font-display)" }}>{title(data)}</h1>
                   <span className="flex items-center gap-1 text-sm text-amber-400">
                     <Star width={14} height={14} />
                     {data.vote_average?.toFixed(1)}

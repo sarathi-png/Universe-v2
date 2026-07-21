@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { IMG, title, type MediaType } from "../api/tmdb";
 import { useDetails } from "../hooks/queries";
 import { mediaStreamApi } from "../api/stream";
 import { ChevronLeft, Play, Info } from "../components/icons";
 import LazyImage from "../components/LazyImage";
+import { staggerContainer, staggerItem } from "../styles/animationPresets";
 
 export default function Sources() {
   const { type, id } = useParams<{ type: MediaType; id: string }>();
@@ -43,7 +45,7 @@ export default function Sources() {
 
         {data && (
           <div className="mb-8 flex items-center gap-4">
-            <div className="w-16 shrink-0 overflow-hidden rounded-lg">
+            <div className="w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/10">
               <LazyImage
                 src={IMG.poster(data.poster_path, "w185")}
                 alt={title(data)}
@@ -51,7 +53,7 @@ export default function Sources() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{title(data)}</h1>
+              <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>{title(data)}</h1>
               <p className="text-sm text-zinc-400">{data.release_date?.slice(0, 4)}</p>
             </div>
           </div>
@@ -60,11 +62,21 @@ export default function Sources() {
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-20 animate-pulse rounded-xl bg-zinc-800" />
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="h-20 animate-pulse rounded-xl bg-zinc-800"
+              />
             ))}
           </div>
         ) : results.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 py-20 text-zinc-500">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-4 py-20 text-zinc-500"
+          >
             <Info width={32} height={32} />
             <p className="text-lg">No torrent sources found for "{query}"</p>
             <button
@@ -73,16 +85,22 @@ export default function Sources() {
             >
               Use Mirror Sources Instead
             </button>
-          </div>
+          </motion.div>
         ) : (
-          <div className="space-y-3">
+          <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+            className="space-y-3"
+          >
             <p className="text-sm text-zinc-400">
               {results.length} torrent source{results.length > 1 ? "s" : ""} found
             </p>
             {results.map((t, i) => (
-              <div
+              <motion.div
                 key={i}
-                className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-violet-500/50"
+                variants={staggerItem}
+                className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition-all hover:border-violet-500/50 hover:bg-white/[0.06]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -110,7 +128,7 @@ export default function Sources() {
                 >
                   <Play width={14} height={14} /> Play
                 </button>
-              </div>
+              </motion.div>
             ))}
             <div className="pt-4 text-center">
               <button
@@ -120,7 +138,7 @@ export default function Sources() {
                 Or use mirror sources instead
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

@@ -14,6 +14,7 @@ import Onboarding from "./components/Onboarding";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Disclaimer from "./components/Disclaimer";
 import { CardModalProvider } from "./components/CardModalProvider";
+import { pageEnter } from "./styles/animationPresets";
 
 const Home = lazy(() => import("./pages/Home"));
 const Browse = lazy(() => import("./pages/Browse"));
@@ -38,7 +39,10 @@ const queryClient = new QueryClient({
 function PageLoader() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="h-12 w-12 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
+      <div className="relative flex h-16 w-16 items-center justify-center">
+        <div className="absolute inset-0 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
+        <div className="text-violet-400 text-xs font-bold tracking-widest">N</div>
+      </div>
     </div>
   );
 }
@@ -46,10 +50,10 @@ function PageLoader() {
 function Page({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.35 }}
+      variants={pageEnter}
+      initial="initial"
+      animate="animate"
+      exit="exit"
     >
       {children}
     </motion.div>

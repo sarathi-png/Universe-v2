@@ -121,7 +121,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
             {/* Content */}
             <div className="pt-20 px-6 sm:px-8 pb-8 space-y-6">
               <div className="space-y-3">
-                <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">{name}</h2>
+                <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>{name}</h2>
                 <div className="flex flex-wrap items-center gap-3 text-sm">
                   {itemYear && <span className="text-white/50">{itemYear}</span>}
                   {certification && (

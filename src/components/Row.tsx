@@ -27,10 +27,14 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
             style={{ background: accent }}
           />
         )}
-        <h2 className="text-lg font-bold tracking-tight md:text-xl">{title}</h2>
+        <h2 className="text-lg font-bold tracking-tight md:text-xl" style={{ fontFamily: "var(--font-display)" }}>{title}</h2>
       </div>
 
       <div className="relative">
+        {/* Gradient fade edges */}
+        <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-16 bg-gradient-to-r from-nova-950 to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 md:block" />
+        <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-16 bg-gradient-to-l from-nova-950 to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 md:block" />
+
         <button
           onClick={() => scroll(-1)}
           className="absolute left-0 top-0 z-30 hidden h-full w-12 items-center justify-center bg-gradient-to-r from-black/80 to-transparent opacity-0 transition group-hover/row:opacity-100 md:flex"
@@ -40,12 +44,14 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
         <div
           ref={ref}
           className="no-scrollbar flex gap-3 overflow-x-auto scroll-smooth px-4 pb-8 pt-2 md:px-10"
+          style={{ scrollSnapType: "x mandatory" }}
         >
           {loading
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
                   className="aspect-[2/3] w-[168px] shrink-0 rounded-xl shimmer"
+                  style={{ scrollSnapAlign: "start" }}
                 />
               ))
             : items?.map((item, i) => (
@@ -55,6 +61,7 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "100px" }}
                   transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.3) }}
+                  style={{ scrollSnapAlign: "start" }}
                 >
                   <MediaCard
                     item={item}

@@ -16,7 +16,7 @@ export default function Disclaimer() {
         >
           <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 md:px-10">
             <Info width={24} height={24} className="shrink-0" />
-            <p className="text-xs font-bold leading-tight md:text-sm">
+            <p className="text-xs font-bold leading-tight md:text-sm" style={{ fontFamily: "var(--font-display)" }}>
               DISCLAIMER: This website is not responsible for the content playing inside it. It only aggregates and links to third-party streaming providers to view movies and shows.
             </p>
             <button

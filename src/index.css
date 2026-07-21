@@ -2,6 +2,27 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-number: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-nova-950: #050507;
+  --color-nova-900: #0a0a10;
+  --color-nova-800: #0f0f18;
+  --color-nova-700: #151525;
+  --color-violet-brand: #8b5cf6;
+  --color-violet-light: #a78bfa;
+  --color-violet-pale: #c4b5fd;
+  --color-cyan-brand: #06b6d4;
+  --color-pink-brand: #d946ef;
+  --color-hot-pink: #f43f5e;
+  --color-amber-brand: #f59e0b;
+
+  --brand-gradient-1: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  --brand-gradient-2: linear-gradient(135deg, #d946ef, #f43f5e);
+  --brand-gradient-3: linear-gradient(135deg, #8b5cf6, #d946ef);
+  --brand-gradient-4: linear-gradient(135deg, #06b6d4, #3b82f6);
+  --brand-gradient-5: linear-gradient(135deg, #f97316, #ef4444);
 }
 
 @layer base {
@@ -11,7 +32,7 @@
   }
 
   body {
-    @apply bg-[#050507] text-zinc-100 antialiased;
+    @apply bg-nova-950 text-zinc-100 antialiased;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -46,12 +67,14 @@
 @utility shimmer {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.03) 100%
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.08) 40%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 60%,
+    rgba(255, 255, 255, 0.02) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
 }
 
 @utility text-glow {
@@ -59,9 +82,31 @@
     0 0 60px rgba(139, 92, 246, 0.15);
 }
 
+@utility text-gradient-brand {
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4, #d946ef);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 @utility neon-border {
   box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.2),
     0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+@utility noise-overlay {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    background-repeat: repeat;
+    pointer-events: none;
+    z-index: 1;
+  }
 }
 
 @utility no-scrollbar {
@@ -82,6 +127,41 @@
   &::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 999px;
+  }
+}
+
+@utility gradient-border {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--angle, 0deg),
+      #8b5cf6,
+      #06b6d4,
+      #d946ef,
+      #8b5cf6
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: rotate-border 4s linear infinite;
+  }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate-border {
+  to {
+    --angle: 360deg;
   }
 }
 
@@ -129,5 +209,55 @@
   }
   100% {
     transform: translateY(100vh);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+@utility animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes chromatic-shift {
+  0% {
+    text-shadow: -1px 0 #06b6d4, 1px 0 #d946ef;
+  }
+  25% {
+    text-shadow: 1px -1px #06b6d4, -1px 1px #d946ef;
+  }
+  50% {
+    text-shadow: 1px 0 #06b6d4, -1px 0 #d946ef;
+  }
+  75% {
+    text-shadow: -1px 1px #06b6d4, 1px -1px #d946ef;
+  }
+  100% {
+    text-shadow: -1px 0 #06b6d4, 1px 0 #d946ef;
+  }
+}
+
+@utility animate-chromatic {
+  animation: chromatic-shift 3s ease-in-out infinite;
+}
+
+/* prefers-reduced-motion: disable all non-essential animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

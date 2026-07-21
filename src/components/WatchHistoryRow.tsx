@@ -26,7 +26,7 @@ export default function WatchHistoryRow({ items }: { items: HistoryItem[] }) {
     <section className="my-8">
       <div className="mb-3 flex items-center gap-3 px-4 md:px-10">
         <span className="h-5 w-1.5 rounded-full bg-gradient-to-b from-violet-400 to-indigo-500" />
-        <h2 className="text-lg font-bold tracking-tight md:text-xl">
+        <h2 className="text-lg font-bold tracking-tight md:text-xl" style={{ fontFamily: "var(--font-display)" }}>
           Watch History
         </h2>
         <span className="text-sm text-zinc-500">({items.length})</span>

@@ -33,7 +33,6 @@ export interface TorrentSource {
 }
 
 const imdbCache = new Map<string, string>();
-const torrentAccess = new Map<string, number>();
 
 // ── TorrentEngine v2 (LRU, memory-managed) ──────────────────────
 
@@ -406,7 +405,7 @@ export function safeTorrentStream(req: Request, res: Response): void {
   });
 }
 
-export function cleanupTorrents(maxAgeMs = 30 * 60 * 1000): void {
+export function cleanupTorrents(): void {
   engine.evict();
 }
 
@@ -424,5 +423,5 @@ function getContentType(filename: string): string {
     mp4: "video/mp4", mkv: "video/x-matroska", avi: "video/x-msvideo",
     webm: "video/webm", m4v: "video/mp4", mov: "video/quicktime",
   };
-  return map[ext] || "video/mp4";
+  return map[ext ?? ""] || "video/mp4";
 }

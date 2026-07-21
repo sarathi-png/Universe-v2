@@ -47,7 +47,7 @@ export default function AgeGate({
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20 text-red-500">
             <span className="text-2xl font-black">18+</span>
           </div>
-          <h2 className="mb-3 text-2xl font-black">Age Restricted Content</h2>
+          <h2 className="mb-3 text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>Age Restricted Content</h2>
           <p className="mb-8 text-sm text-zinc-400">
             This title is explicitly rated <strong>18+ Adult (NC-17 / A)</strong> and contains content that is inappropriate for children. You must be at least 18 years old to proceed.
           </p>

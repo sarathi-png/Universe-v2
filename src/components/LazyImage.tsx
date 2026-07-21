@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { cn } from "../utils/cn";
 
 interface Props extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -14,6 +14,9 @@ export default function LazyImage({
 }: Props) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+
+  const onLoad = useCallback(() => setLoaded(true), []);
+  const onError = useCallback(() => setError(true), []);
 
   if (!src || error) {
     return (
@@ -31,18 +34,18 @@ export default function LazyImage({
   }
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div className={cn("group relative overflow-hidden", className)}>
       {!loaded && <div className="absolute inset-0 shimmer" />}
       <img
         src={src}
         alt={alt}
         loading="lazy"
         decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
+        onLoad={onLoad}
+        onError={onError}
         className={cn(
-          "h-full w-full object-cover transition-all duration-700",
-          loaded ? "opacity-100 scale-100" : "opacity-0 scale-105"
+          "h-full w-full object-cover transition-all duration-[800ms] ease-out",
+          loaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-[1.03] blur-[2px]"
         )}
         {...rest}
       />

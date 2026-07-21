@@ -14,6 +14,8 @@ import LazyImage from "./LazyImage";
 import { Play, PlusIcon, Check, Star, Info } from "./icons";
 import { getCertification } from "./ContentRatingBadge";
 import { useCardModal } from "./CardModalProvider";
+import { useMagnetic } from "../hooks/useMagnetic";
+import { spring } from "../styles/animationPresets";
 
 interface Props {
   item: MediaItem;
@@ -38,6 +40,7 @@ export default function MediaCard({ item, rank }: Props) {
 
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [certification, setCertification] = useState<string | null>(null);
+  const magnetic = useMagnetic(0.2);
 
   const onEnter = () => {
     timer.current = setTimeout(async () => {
@@ -50,7 +53,7 @@ export default function MediaCard({ item, rank }: Props) {
         if (trailer) setTrailerKey(trailer.key);
         setCertification(getCertification(details, type));
       } catch (e) {
-        // fail silently if trailer fetch fails
+        // fail silently
       }
     }, 450);
   };
@@ -60,6 +63,7 @@ export default function MediaCard({ item, rank }: Props) {
     setHover(false);
     setTrailerKey(null);
     setCertification(null);
+    magnetic.onMouseLeave();
   };
 
   return (
@@ -80,18 +84,24 @@ export default function MediaCard({ item, rank }: Props) {
             {rank}
           </span>
         )}
-        <button
+        <motion.button
           onClick={open}
-          className="group relative aspect-[2/3] w-[168px] shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 transition-transform duration-300 hover:ring-violet-500/40"
+          ref={magnetic.ref as React.Ref<HTMLButtonElement>}
+          style={{ x: magnetic.x, y: magnetic.y }}
+          onMouseMove={magnetic.onMouseMove}
+          className="group relative aspect-[2/3] w-[168px] shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 transition-all duration-300 hover:ring-violet-500/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]"
         >
           <LazyImage
             src={IMG.poster(item.poster_path)}
             fallbackText={title(item)}
             alt={title(item)}
-            className="h-full w-full"
+            className="h-full w-full transition-transform duration-500 group-hover:scale-[1.03]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-        </button>
+          {hover && (
+            <div className="absolute inset-0 gradient-border opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          )}
+        </motion.button>
       </div>
 
       {/* Hover popup */}
@@ -101,7 +111,7 @@ export default function MediaCard({ item, rank }: Props) {
             initial={{ opacity: 0, scale: 0.85, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 8 }}
-            transition={{ type: "spring", stiffness: 320, damping: 26 }}
+            transition={spring}
             onClick={open}
             className="absolute -left-6 -top-6 z-50 hidden w-72 cursor-pointer overflow-hidden rounded-2xl glass-strong shadow-2xl shadow-black/70 md:block"
           >

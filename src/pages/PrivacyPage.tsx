@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       animate={{ opacity: 1, y: 0 }}
       className="mx-auto min-h-screen max-w-3xl px-4 pb-24 pt-24 sm:px-6 lg:px-8"
     >
-      <h1 className="mb-8 text-3xl font-bold text-white">Privacy Policy</h1>
+      <h1 className="mb-8 text-3xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>Privacy Policy</h1>
 
       <div className="space-y-6 text-sm leading-relaxed text-white/60">
         <section>

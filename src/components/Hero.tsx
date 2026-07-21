@@ -11,8 +11,15 @@ import {
 } from "../api/tmdb";
 import { useStore } from "../store/useStore";
 import LazyImage from "./LazyImage";
+import ParticleCanvas from "./ParticleCanvas";
 import { Play, PlusIcon, Check, Star, Info, Volume, Mute } from "./icons";
 import { useCardModal } from "./CardModalProvider";
+import { heroTextStagger, heroChar, smooth } from "../styles/animationPresets";
+import { useScrollOffset } from "../hooks/useParallax";
+
+function splitText(text: string) {
+  return text.split("").map((char, i) => ({ char, id: `${i}-${char}` }));
+}
 
 export default function Hero({ items }: { items: MediaItem[] }) {
   const [idx, setIdx] = useState(0);
@@ -24,6 +31,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
   const { openCardModal } = useCardModal();
   const featured = items.slice(0, 6);
   const trailerFetched = useRef(new Set<number>());
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!featured.length) return;
@@ -31,7 +39,6 @@ export default function Hero({ items }: { items: MediaItem[] }) {
     return () => clearInterval(t);
   }, [featured.length]);
 
-  // Fetch trailer for current item
   useEffect(() => {
     setShowTrailer(false);
     const current = featured[idx];
@@ -48,19 +55,18 @@ export default function Hero({ items }: { items: MediaItem[] }) {
           setVideoKeys((prev) => new Map(prev).set(current.id, trailer.key));
         }
       } catch {
-        // trailer fetch is non-critical
+        // non-critical
       }
     })();
   }, [idx, featured]);
 
-  // Delay trailer appearance by 5s after slide change
   useEffect(() => {
     setShowTrailer(false);
     const current = featured[idx];
     if (!current) return;
     const key = videoKeys.get(current.id);
     if (!key) return;
-    const t = setTimeout(() => setShowTrailer(true), 5000);
+    const t = setTimeout(() => setShowTrailer(true), 3000);
     return () => clearTimeout(t);
   }, [idx, featured, videoKeys]);
 
@@ -73,9 +79,29 @@ export default function Hero({ items }: { items: MediaItem[] }) {
   const saved = inWatchlist(m.id);
   const videoKey = videoKeys.get(m.id);
   const showVideo = showTrailer && videoKey;
+  const chars = splitText(title(m));
 
   return (
-    <section className="relative h-[88vh] min-h-[560px] w-full overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative h-[88vh] min-h-[560px] w-full overflow-hidden"
+    >
+      {/* Particle storm layer */}
+      <ParticleCanvas
+        count={70}
+        colors={[
+          "139, 92, 246",
+          "6, 182, 212",
+          "217, 70, 239",
+          "244, 63, 94",
+          "167, 139, 250",
+        ]}
+        maxSpeed={1.2}
+        interactive
+        className="z-[3]"
+      />
+
+      {/* Backdrop */}
       <AnimatePresence mode="popLayout">
         <motion.div
           key={m.id}
@@ -93,6 +119,16 @@ export default function Hero({ items }: { items: MediaItem[] }) {
         </motion.div>
       </AnimatePresence>
 
+      {/* Parallax glow layers */}
+      <motion.div
+        className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float-glow z-[1]"
+        style={{ y: useScrollOffset(-30) }}
+      />
+      <motion.div
+        className="pointer-events-none absolute bottom-0 right-10 h-80 w-80 rounded-full bg-fuchsia-600/15 blur-[120px] animate-float-glow z-[1]"
+        style={{ y: useScrollOffset(20) }}
+      />
+
       {/* YouTube trailer overlay */}
       <AnimatePresence>
         {showVideo && (
@@ -109,7 +145,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
               style={{
                 border: "none",
                 transform: "scale(1.1)",
-                filter: "brightness(0.7)",
+                filter: "brightness(0.6) contrast(1.1)",
               }}
               allow="autoplay; encrypted-media"
               title="Trailer preview"
@@ -120,20 +156,17 @@ export default function Hero({ items }: { items: MediaItem[] }) {
         )}
       </AnimatePresence>
 
-      {/* gradients (always present under video) */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-black/40 pointer-events-none" />
+      {/* Base gradients */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent pointer-events-none z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-black/40 pointer-events-none z-[2]" />
 
-      {/* ambient floating glows */}
-      <div className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float-glow" />
-      <div className="pointer-events-none absolute bottom-0 right-10 h-80 w-80 rounded-full bg-fuchsia-600/15 blur-[120px] animate-float-glow" />
-
-      {/* scan line effect */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.03]">
+      {/* Scan line effect */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.02] z-[2]">
         <div className="h-px w-full bg-violet-400/30" style={{ animation: "scan-line 8s linear infinite" }} />
       </div>
 
-      <div className="absolute inset-0 flex items-center">
+      {/* Content */}
+      <div className="absolute inset-0 z-10 flex items-center">
         <div className="max-w-2xl px-4 md:px-10">
           <AnimatePresence mode="wait">
             <motion.div
@@ -141,15 +174,43 @@ export default function Hero({ items }: { items: MediaItem[] }) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.6 }}
+              transition={smooth}
             >
-              <span className="mb-4 inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs font-semibold uppercase tracking-widest text-violet-300">
+              <motion.span
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, ...smooth }}
+                className="mb-4 inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs font-semibold uppercase tracking-widest text-violet-300"
+              >
                 <Star width={12} height={12} /> {type === "tv" ? "Featured Series" : "Featured Film"}
-              </span>
-              <h1 className="mb-4 text-4xl font-black leading-none tracking-tighter text-glow md:text-7xl">
-                {title(m)}
-              </h1>
-              <div className="mb-4 flex flex-wrap items-center gap-3 text-sm font-medium">
+              </motion.span>
+
+              {/* Staggered character title */}
+              <motion.h1
+                variants={heroTextStagger}
+                initial="initial"
+                animate="animate"
+                className="mb-4 overflow-hidden text-4xl font-black leading-none tracking-tighter text-glow md:text-7xl"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {chars.map(({ char, id }) => (
+                  <motion.span
+                    key={id}
+                    variants={heroChar}
+                    className="inline-block"
+                    style={{ whiteSpace: char === " " ? "pre" : undefined }}
+                  >
+                    {char === " " ? "\u00A0" : char}
+                  </motion.span>
+                ))}
+              </motion.h1>
+
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45, ...smooth }}
+                className="mb-4 flex flex-wrap items-center gap-3 text-sm font-medium"
+              >
                 <span className="flex items-center gap-1 text-amber-400">
                   <Star width={14} height={14} />
                   {m.vote_average?.toFixed(1)}
@@ -161,32 +222,45 @@ export default function Hero({ items }: { items: MediaItem[] }) {
                 <span className="rounded bg-violet-600/30 px-2 py-0.5 text-xs font-bold text-violet-200">
                   4K HDR
                 </span>
-              </div>
-              <p className="mb-7 line-clamp-3 max-w-xl text-sm leading-relaxed text-zinc-300 md:text-base">
+              </motion.div>
+
+              <motion.p
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55, ...smooth }}
+                className="mb-7 line-clamp-3 max-w-xl text-sm leading-relaxed text-zinc-300 md:text-base"
+              >
                 {m.overview}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65, ...smooth }}
+                className="flex flex-wrap items-center gap-3"
+              >
                 <button
                   onClick={() => navigate(`/sources/${type}/${m.id}`)}
-                  className="flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-bold text-black transition hover:scale-105 hover:bg-zinc-200"
+                  className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-white px-7 py-3 text-sm font-bold text-black transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(139,92,246,0.4)]"
                 >
-                  <Play width={20} height={20} /> Play Now
+                  <span className="relative z-10 flex items-center gap-2"><Play width={20} height={20} /> Play Now</span>
+                  <div className="absolute inset-0 translate-y-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-transform duration-300 group-hover:translate-y-0" />
                 </button>
                 <button
                   onClick={() => setShowTrailer(!showVideo)}
-                  className="flex items-center gap-2 rounded-full glass px-6 py-3 text-sm font-semibold transition hover:bg-white/15"
+                  className="flex items-center gap-2 rounded-full glass px-6 py-3 text-sm font-semibold transition-all hover:bg-white/15 hover:scale-105"
                 >
                   <Play width={16} height={16} /> {showVideo ? "Hide Trailer" : "Trailer"}
                 </button>
                 <button
                   onClick={() => openCardModal(m)}
-                  className="flex items-center gap-2 rounded-full glass px-6 py-3 text-sm font-semibold transition hover:bg-white/15"
+                  className="flex items-center gap-2 rounded-full glass px-6 py-3 text-sm font-semibold transition-all hover:bg-white/15 hover:scale-105"
                 >
                   <Info width={18} height={18} /> More Info
                 </button>
                 <button
                   onClick={() => toggleWatchlist({ ...m, media_type: type })}
-                  className="flex h-12 w-12 items-center justify-center rounded-full glass transition hover:bg-white/15"
+                  className="flex h-12 w-12 items-center justify-center rounded-full glass transition-all hover:bg-white/15 hover:scale-110"
                   aria-label="Watchlist"
                 >
                   {saved ? (
@@ -198,31 +272,47 @@ export default function Hero({ items }: { items: MediaItem[] }) {
                 {showVideo && (
                   <button
                     onClick={() => setMuted(!muted)}
-                    className="flex h-12 w-12 items-center justify-center rounded-full glass transition hover:bg-white/15"
+                    className="flex h-12 w-12 items-center justify-center rounded-full glass transition-all hover:bg-white/15 hover:scale-110"
                     aria-label={muted ? "Unmute" : "Mute"}
                   >
                     {muted ? <Mute width={18} height={18} /> : <Volume width={18} height={18} />}
                   </button>
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* indicators */}
+      {/* Indicators */}
       <div className="absolute bottom-8 right-4 z-20 flex gap-2 md:right-10">
         {featured.map((_, i) => (
           <button
             key={i}
             onClick={() => setIdx(i)}
-            className={`h-1 rounded-full transition-all ${
-              i === idx ? "w-8 bg-violet-400" : "w-4 bg-white/30"
-            }`}
+            className="group relative h-1 cursor-pointer"
             aria-label={`Slide ${i + 1}`}
-          />
+          >
+            <span
+              className={`absolute inset-0 rounded-full transition-all duration-500 ${
+                i === idx ? "w-8 bg-violet-400" : "w-4 bg-white/30"
+              }`}
+            />
+            {i === idx && (
+              <span
+                className="absolute inset-0 rounded-full bg-violet-300"
+                style={{
+                  width: "100%",
+                  animation: "shimmer 8s linear",
+                  opacity: 0.5,
+                }}
+              />
+            )}
+          </button>
         ))}
       </div>
     </section>
   );
 }
+
+

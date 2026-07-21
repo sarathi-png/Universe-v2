@@ -1,17 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Search, Bookmark, Sparkle } from "../components/icons";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScroll = useRef(0);
+  const { scrollY } = useScroll();
   const navigate = useNavigate();
   const loc = useLocation();
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const prev = lastScroll.current;
+    lastScroll.current = latest;
+    if (prev < latest && latest > 150) {
+      setHidden(true);
+    } else if (latest < prev) {
+      setHidden(false);
+    }
+  });
 
   const links = [
     { to: "/", label: "Home" },
@@ -25,18 +39,23 @@ export default function Navbar() {
   return (
     <motion.header
       initial={{ y: -80 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
+      animate={{ y: hidden ? -80 : 0 }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className={`fixed inset-x-0 top-0 z-[60] transition-all duration-500 ${
         scrolled ? "glass-strong" : "bg-gradient-to-b from-black/80 to-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 items-center gap-6 px-4 md:px-10">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 neon-border">
-            <Sparkle width={20} height={20} className="text-white" />
+      <div className={`mx-auto flex items-center gap-6 px-4 md:px-10 transition-all duration-300 ${scrolled ? "h-14" : "h-16"}`}>
+        <Link to="/" className="group flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 neon-border transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
+            >
+              <Sparkle width={20} height={20} className="text-white" />
+            </motion.div>
           </div>
-          <span className="hidden text-xl font-black tracking-tight text-glow sm:block">
+          <span className="hidden text-xl font-black tracking-tight text-glow sm:block" style={{ fontFamily: "var(--font-display)" }}>
             NOVA<span className="text-violet-400">STREAM</span>
           </span>
         </Link>

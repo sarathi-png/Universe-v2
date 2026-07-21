@@ -1,5 +1,6 @@
 import Hero from "../components/Hero";
 import Row from "../components/Row";
+import ParticleCanvas from "../components/ParticleCanvas";
 import { useStore } from "../store/useStore";
 import ContinueWatchingRow from "../components/ContinueWatchingRow";
 import WatchHistoryRow from "../components/WatchHistoryRow";
@@ -36,8 +37,16 @@ export default function Home() {
   });
 
   return (
-    <div className="pb-20 md:pb-10">
-      <Hero items={trending.data || []} />
+    <div className="relative pb-20 md:pb-10">
+      <ParticleCanvas
+        count={35}
+        maxSpeed={0.5}
+        colors={["139, 92, 246", "6, 182, 212", "167, 139, 250"]}
+        interactive={false}
+        className="z-0"
+      />
+      <div className="relative z-10">
+        <Hero items={trending.data || []} />
 
       <div className="relative z-10 -mt-24">
         {continueWatching.length > 0 && (
@@ -101,6 +110,7 @@ export default function Home() {
           items={airing.data}
           loading={airing.isLoading}
         />
+        </div>
       </div>
     </div>
   );

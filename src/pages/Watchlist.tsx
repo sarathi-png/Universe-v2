@@ -35,7 +35,7 @@ export default function Watchlist() {
     <div className="min-h-screen px-4 pb-24 pt-24 md:px-10">
       <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="mb-2 flex items-center gap-3 text-3xl font-black tracking-tight md:text-4xl">
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-black tracking-tight md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
             {tab === "list" ? <Bookmark width={30} height={30} className="text-violet-400" /> : <Clock width={30} height={30} className="text-amber-400" />} 
             {tab === "list" ? "My List" : "Watch History"}
           </h1>

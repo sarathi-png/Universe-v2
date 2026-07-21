@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 import createHttpsProxyAgent from "https-proxy-agent";
 
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
-const proxyConfig = proxyUrl ? { httpsAgent: createHttpsProxyAgent(proxyUrl), proxy: false } : {};
+const proxyConfig = proxyUrl ? { httpsAgent: createHttpsProxyAgent(proxyUrl), proxy: false as const } : {};
 
 const http = axios.create({ timeout: 15000, validateStatus: () => true, ...proxyConfig });
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -263,7 +263,8 @@ async function search1337x(query: string): Promise<ScrapedTorrent[]> {
           batch.map((item) => resolve1337xMagnet(item.detailUrl))
         );
         for (let j = 0; j < batch.length; j++) {
-          const magnet = magnets[j].status === "fulfilled" ? magnets[j].value : null;
+          const r = magnets[j];
+          const magnet = r.status === "fulfilled" ? r.value : null;
           results.push({
             magnet: magnet || "",
             name: batch[j].name,
