@@ -6,16 +6,17 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  componentStack: string;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null };
+  state: State = { hasError: false, error: null, componentStack: "" };
   static getDerivedStateFromError(error: Error) {
-    console.error("[ErrorBoundary] Caught:", error);
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("[ErrorBoundary] componentDidCatch:", error, info.componentStack);
+    console.error("[ErrorBoundary]", error.message, "\nStack:", info.componentStack);
+    this.setState({ componentStack: info.componentStack ?? "" });
   }
   render() {
     if (this.state.hasError) {
@@ -27,9 +28,14 @@ export default class ErrorBoundary extends Component<Props, State> {
           <h1 className="text-2xl font-black tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
             Something went off-script
           </h1>
-          <p className="max-w-md text-zinc-500">
-            {this.state.error?.message || "We hit an unexpected error. Try reloading the experience."}
+          <p className="max-w-md text-red-400 text-sm font-mono">
+            {this.state.error?.message || "Unknown error"}
           </p>
+          {this.state.componentStack && (
+            <pre className="mt-2 max-w-2xl overflow-auto rounded-lg bg-black/40 p-4 text-left text-xs text-zinc-400 font-mono">
+              {this.state.componentStack}
+            </pre>
+          )}
           <button
             onClick={() => window.location.reload()}
             className="rounded-full bg-violet-600 px-6 py-3 font-bold transition hover:bg-violet-500 hover:scale-105 active:scale-95"
