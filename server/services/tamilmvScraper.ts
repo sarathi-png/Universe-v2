@@ -228,20 +228,20 @@ const PENALTY_PATTERNS = /\b(story|trailer|review|explanation|making|behind|scen
 
 async function search1TamilMV(query: string): Promise<Candidate[]> {
   try {
-    const url = `${BASE}/search/api/search.php?q=${encodeURIComponent(query)}&page=1&sort=title_asc&direct=0&priority=0`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": UA, Accept: "application/json", Referer: `${BASE}/search/` },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!res.ok) return [];
-
-    const body: { results?: SearchApiResult[] } = await res.json();
-    if (!body.results || body.results.length === 0) return [];
+    const { data } = await axios.get<{ results?: SearchApiResult[] }>(
+      `${BASE}/search/api/search.php`,
+      {
+        params: { q: query, page: 1, sort: "title_asc", direct: 0, priority: 0 },
+        headers: { "User-Agent": UA, Referer: `${BASE}/search/` },
+        timeout: 15000,
+      }
+    );
+    if (!data || !data.results || data.results.length === 0) return [];
 
     const seen = new Set<number>();
     const candidates: Candidate[] = [];
 
-    for (const r of body.results) {
+    for (const r of data.results) {
       if (seen.has(r.tid) || r.tid === 183) continue;
       seen.add(r.tid);
 
@@ -313,12 +313,15 @@ async function fetchTopicHtml(topicId: number, slug?: string): Promise<string | 
   const cleanSlug = slug ? slug.replace(/\/+$/, "") : "";
   const slugSuffix = cleanSlug ? `-${cleanSlug}` : "";
   const url = `${BASE}/index.php?/forums/topic/${topicId}${slugSuffix}/`;
-  const res = await fetch(url, {
-    headers: { "User-Agent": UA, Accept: "text/html" },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!res.ok) return null;
-  return res.text();
+  try {
+    const { data } = await axios.get(url, {
+      headers: { "User-Agent": UA },
+      timeout: 15000,
+    });
+    return typeof data === "string" ? data : String(data);
+  } catch {
+    return null;
+  }
 }
 
 async function scrapeTopicPage(topicId: number, slug?: string): Promise<TamilmvResult | null> {

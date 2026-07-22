@@ -1,4 +1,5 @@
 import http from "http";
+import https from "https";
 
 export class KeepWarm {
   private url: string;
@@ -21,17 +22,25 @@ export class KeepWarm {
     if (this.timer) clearInterval(this.timer);
   }
 
+  private getAgent() {
+    if (this.url.startsWith('https://')) {
+      return new https.Agent({ rejectUnauthorized: false });
+    }
+    return new http.Agent();
+  }
+
   private ping(): void {
     const start = Date.now();
-    http
-      .get(this.url, (res) => {
-        let body = "";
-        res.on("data", (c) => (body += c));
-        res.on("end", () => {
+    const agent = this.getAgent();
+    (this.url.startsWith('https://') ? https : http)
+      .get(this.url, { agent }, (res) => {
+        let body = '';
+        res.on('data', (c) => (body += c));
+        res.on('end', () => {
           console.log(`[keepwarm] ${res.statusCode} — ${Date.now() - start}ms`);
         });
       })
-      .on("error", (err) => {
+      .on('error', (err) => {
         console.log(`[keepwarm] Error: ${err.message}`);
       });
   }
