@@ -70,6 +70,10 @@ export default function Hero({ items }: { items: MediaItem[] }) {
     return () => clearTimeout(t);
   }, [idx, featured, videoKeys]);
 
+  // MUST be before early return — called unconditionally to keep hook order stable
+  const glowY1 = useScrollOffset(-30);
+  const glowY2 = useScrollOffset(20);
+
   if (!featured.length) {
     return <div className="h-[85vh] w-full shimmer" />;
   }
@@ -122,11 +126,11 @@ export default function Hero({ items }: { items: MediaItem[] }) {
       {/* Parallax glow layers */}
       <motion.div
         className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float-glow z-[1]"
-        style={{ y: useScrollOffset(-30) }}
+        style={{ y: glowY1 }}
       />
       <motion.div
         className="pointer-events-none absolute bottom-0 right-10 h-80 w-80 rounded-full bg-fuchsia-600/15 blur-[120px] animate-float-glow z-[1]"
-        style={{ y: useScrollOffset(20) }}
+        style={{ y: glowY2 }}
       />
 
       {/* YouTube trailer overlay */}
