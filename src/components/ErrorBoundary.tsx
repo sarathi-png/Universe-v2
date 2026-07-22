@@ -1,12 +1,21 @@
 import { Component, type ReactNode } from "react";
 
-export default class ErrorBoundary extends Component<
-  { children: ReactNode },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
+interface Props {
+  children: ReactNode;
+}
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export default class ErrorBoundary extends Component<Props, State> {
+  state: State = { hasError: false, error: null };
+  static getDerivedStateFromError(error: Error) {
+    console.error("[ErrorBoundary] Caught:", error);
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("[ErrorBoundary] componentDidCatch:", error, info.componentStack);
   }
   render() {
     if (this.state.hasError) {
@@ -19,7 +28,7 @@ export default class ErrorBoundary extends Component<
             Something went off-script
           </h1>
           <p className="max-w-md text-zinc-500">
-            We hit an unexpected error. Try reloading the experience.
+            {this.state.error?.message || "We hit an unexpected error. Try reloading the experience."}
           </p>
           <button
             onClick={() => window.location.reload()}
