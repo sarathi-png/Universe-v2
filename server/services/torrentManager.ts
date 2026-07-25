@@ -379,13 +379,16 @@ export async function handleTorrentStream(req: Request, res: Response): Promise<
     const chunkSize = end - start + 1;
     const contentType = getContentType(file.name);
 
-    res.writeHead(range ? 206 : 200, {
+    const headers: Record<string, string | number> = {
       "Content-Type": contentType,
       "Content-Length": chunkSize,
       "Accept-Ranges": "bytes",
-      "Content-Range": range ? `bytes ${start}-${end}/${fileSize}` : undefined,
       "Cache-Control": "no-cache, no-store, must-revalidate",
-    });
+    };
+    if (range) {
+      headers["Content-Range"] = `bytes ${start}-${end}/${fileSize}`;
+    }
+    res.writeHead(range ? 206 : 200, headers);
 
     const stream = engine.createReadStream(file, start, end);
     stream.pipe(res);

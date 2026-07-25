@@ -95,7 +95,7 @@ function qualityRank(q: string): number {
 
 async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
   try {
-    const url = `https://yts.mx/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&sort_by=seeders&limit=30`;
+    const url = `https://yts.gg/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&sort_by=seeders&limit=30`;
     const { data } = await http.get(url);
     const movies = data?.data?.movies;
     if (!Array.isArray(movies)) return [];
@@ -392,7 +392,7 @@ export interface SearchOptions {
 
 /**
  * Try providers in priority order, stop at the first that returns results.
- * Chain: YTS → TPB → LimeTorrents → 1337x → EZTV → torrent-search-api
+ * Chain: YTS → TPB → LimeTorrents → 1337x → EZTV → TSA (torrent-search-api)
  */
 export async function searchAllV2(query: string, options: SearchOptions = {}): Promise<ScrapedTorrent[]> {
   const { quality, lang, limit = 30 } = options;
@@ -403,12 +403,12 @@ export async function searchAllV2(query: string, options: SearchOptions = {}): P
   }
 
   const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
-    { name: "TSA", scrape: searchTSA },
-    { name: "TPB", scrape: searchTPB },
     { name: "YTS", scrape: searchYTS },
+    { name: "TPB", scrape: searchTPB },
     { name: "LimeTorrents", scrape: searchLimeTorrents },
     { name: "1337x", scrape: search1337x },
     { name: "EZTV", scrape: searchEZTV },
+    { name: "TSA", scrape: searchTSA },
   ];
 
   for (const scraper of chain) {
@@ -463,12 +463,12 @@ export async function searchAllV2Debug(query: string): Promise<{
   const scrapers: Record<string, { status: string; count: number; error?: string }> = {};
 
   const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
-    { name: "TSA", scrape: searchTSA },
-    { name: "TPB", scrape: searchTPB },
     { name: "YTS", scrape: searchYTS },
+    { name: "TPB", scrape: searchTPB },
     { name: "LimeTorrents", scrape: searchLimeTorrents },
     { name: "1337x", scrape: search1337x },
     { name: "EZTV", scrape: searchEZTV },
+    { name: "TSA", scrape: searchTSA },
   ];
 
   let all: ScrapedTorrent[] = [];
