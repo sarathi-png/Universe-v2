@@ -41,7 +41,7 @@ export default function ContinueWatchingRow({
                 className="h-full w-full"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-black">
                   <Play width={22} height={22} />
                 </span>
@@ -63,7 +63,7 @@ export default function ContinueWatchingRow({
             </button>
             <button
               onClick={() => removeProgress(item.id)}
-              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 opacity-0 transition group-hover:opacity-100"
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 opacity-0 transition-opacity group-hover:opacity-100"
             >
               <Close width={14} height={14} />
             </button>

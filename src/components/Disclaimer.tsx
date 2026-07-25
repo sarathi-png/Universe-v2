@@ -21,7 +21,7 @@ export default function Disclaimer() {
             </p>
             <button
               onClick={dismissDisclaimer}
-              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/10 transition hover:bg-black/20"
+              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/10 transition-colors hover:bg-black/20"
               aria-label="Close disclaimer"
             >
               <Close width={16} height={16} />

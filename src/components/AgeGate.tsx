@@ -54,13 +54,13 @@ export default function AgeGate({
           <div className="flex flex-col gap-3">
             <button
               onClick={confirmAge}
-              className="rounded-full bg-red-600 px-6 py-3 font-bold transition hover:bg-red-500"
+              className="rounded-full bg-red-600 px-6 py-3 font-bold transition-colors hover:bg-red-500"
             >
               I Confirm I am 18 or older
             </button>
             <button
               onClick={() => window.history.back()}
-              className="rounded-full bg-white/10 px-6 py-3 font-bold transition hover:bg-white/20"
+              className="rounded-full bg-white/10 px-6 py-3 font-bold transition-colors hover:bg-white/20"
             >
               Go Back
             </button>

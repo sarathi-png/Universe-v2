@@ -100,7 +100,7 @@ export default function Sources() {
               <motion.div
                 key={i}
                 variants={staggerItem}
-                className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition-all hover:border-violet-500/50 hover:bg-white/[0.06]"
+                className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition-[border-color,background] hover:border-violet-500/50 hover:bg-white/[0.06]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

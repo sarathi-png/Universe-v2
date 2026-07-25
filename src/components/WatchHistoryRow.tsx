@@ -54,7 +54,7 @@ export default function WatchHistoryRow({ items }: { items: HistoryItem[] }) {
                   className="h-full w-full"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-black">
                     <Play width={22} height={22} />
                   </span>
@@ -72,14 +72,14 @@ export default function WatchHistoryRow({ items }: { items: HistoryItem[] }) {
                 </div>
                 <div className="absolute bottom-0 left-0 h-1 w-full bg-white/20">
                   <div
-                    className="h-full bg-violet-500 transition-all"
+                    className="h-full bg-violet-500 transition-[width]"
                     style={{ width: `${Math.max(pct, 5)}%` }}
                   />
                 </div>
               </button>
               <button
                 onClick={() => removeFromHistory(item.id)}
-                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/80"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/80"
                 title="Remove from history"
               >
                 <Close width={14} height={14} />

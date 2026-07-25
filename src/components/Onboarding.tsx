@@ -63,7 +63,7 @@ export default function Onboarding() {
           {SLIDES.map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-[width] ${
                 i === step ? "w-8 bg-violet-400" : "w-1.5 bg-white/20"
               }`}
             />
@@ -73,13 +73,13 @@ export default function Onboarding() {
         <div className="flex items-center justify-between gap-4">
           <button
             onClick={finish}
-            className="text-sm text-zinc-500 transition hover:text-white"
+            className="text-sm text-zinc-500 transition-colors hover:text-white"
           >
             Skip
           </button>
           <button
             onClick={() => (step < SLIDES.length - 1 ? setStep(step + 1) : finish())}
-            className="rounded-full bg-white px-8 py-3 font-bold text-black transition hover:scale-105"
+            className="rounded-full bg-white px-8 py-3 font-bold text-black transition-transform hover:scale-105"
           >
             {step < SLIDES.length - 1 ? "Next" : "Start Watching"}
           </button>

@@ -39,7 +39,10 @@ export default function ParticleCanvas({
   const particlesRef = useRef<Particle[]>([]);
   const animRef = useRef<number>(0);
   const mouseRef = useRef({ x: -1000, y: -1000 });
-  const mqlRef = useRef<MediaQueryList | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const isVisibleRef = useRef(true);
+  const isFocusedRef = useRef(true);
+  const resizeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const initParticle = useCallback(
     (w: number, h: number): Particle => ({
@@ -57,8 +60,15 @@ export default function ParticleCanvas({
   );
 
   useEffect(() => {
-    mqlRef.current = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mqlRef.current.matches) return;
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mql.matches) return;
+
+    const onMotionChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        cancelAnimationFrame(animRef.current);
+      }
+    };
+    mql.addEventListener("change", onMotionChange);
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -70,8 +80,27 @@ export default function ParticleCanvas({
       canvas.height = canvas.clientHeight * devicePixelRatio;
       ctx.scale(devicePixelRatio, devicePixelRatio);
     };
+
+    const debouncedResize = () => {
+      clearTimeout(resizeTimerRef.current);
+      resizeTimerRef.current = setTimeout(resize, 100);
+    };
+
     resize();
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", debouncedResize);
+
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+      },
+      { threshold: 0 }
+    );
+    observerRef.current.observe(canvas);
+
+    const onVisibility = () => {
+      isFocusedRef.current = !document.hidden;
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     const w = () => canvas.clientWidth;
     const h = () => canvas.clientHeight;
@@ -79,6 +108,10 @@ export default function ParticleCanvas({
     particlesRef.current = Array.from({ length: count }, () => initParticle(w(), h()));
 
     const animate = () => {
+      if (!isVisibleRef.current || !isFocusedRef.current) {
+        animRef.current = requestAnimationFrame(animate);
+        return;
+      }
       const cw = w();
       const ch = h();
       ctx.clearRect(0, 0, cw, ch);
@@ -128,7 +161,11 @@ export default function ParticleCanvas({
 
     return () => {
       cancelAnimationFrame(animRef.current);
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", debouncedResize);
+      observerRef.current?.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+      mql.removeEventListener("change", onMotionChange);
+      clearTimeout(resizeTimerRef.current);
     };
   }, [count, colors, maxSpeed, initParticle, interactive]);
 

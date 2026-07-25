@@ -311,7 +311,7 @@ export default function Player({
                     <button
                       onClick={onPrevEpisode}
                       disabled={!hasPrev}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Previous episode"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -323,7 +323,7 @@ export default function Player({
                   <motion.button
                     onClick={togglePlay}
                     whileTap={{ scale: 0.9 }}
-                    className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition"
+                    className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                     title={playerState.playing ? "Pause (Space)" : "Play (Space)"}
                   >
                     {playerState.playing ? (
@@ -341,7 +341,7 @@ export default function Player({
                     <button
                       onClick={onNextEpisode}
                       disabled={!hasNext}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Next episode"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -353,7 +353,7 @@ export default function Player({
                   <div className="flex items-center gap-1 ml-1 group/vol">
                     <button
                       onClick={toggleMute}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition"
+                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                       title={playerState.muted ? "Unmute (M)" : "Mute (M)"}
                     >
                       {playerState.muted || playerState.volume === 0 ? (
@@ -452,7 +452,7 @@ export default function Player({
                   <motion.button
                     onClick={skipIntro}
                     whileTap={{ scale: 0.9 }}
-                    className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition hidden sm:block"
+                    className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors hidden sm:block"
                     title="Skip intro"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -463,7 +463,7 @@ export default function Player({
                   <motion.button
                     onClick={toggleFullscreen}
                     whileTap={{ scale: 0.9 }}
-                    className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition"
+                    className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                     title={playerState.isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
                   >
                     {playerState.isFullscreen ? (
@@ -511,7 +511,7 @@ function DropdownMenu({
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition text-[10px] font-semibold tracking-wider"
+        className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors text-[10px] font-semibold tracking-wider"
         title={label}
       >
         {icon}
@@ -525,7 +525,7 @@ function DropdownMenu({
             <button
               key={i}
               onClick={() => { item.onClick(); setOpen(false); }}
-              className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition ${
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
                 item.active
                   ? "bg-violet-500/20 text-violet-300"
                   : "text-white/80 hover:bg-white/10"

@@ -77,7 +77,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
           className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
           onClick={onClose}
         >
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" />
+          <div className="absolute inset-0 bg-black/85" />
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
@@ -89,7 +89,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-30 p-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all"
+              className="absolute top-4 right-4 z-30 p-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             >
               <Close width={20} height={20} />
             </button>
@@ -154,20 +154,20 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => { navigate(`/sources/${type}/${item.id}`); onClose(); }}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-purple-600/30"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-semibold transition-[transform,background] hover:scale-105 active:scale-95 shadow-lg shadow-purple-600/30"
                 >
                   <Play width={20} height={20} className="fill-white" />
                   Watch Now
                 </button>
                 <button
                   onClick={() => { navigate(`/title/${type}/${item.id}`); onClose(); }}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl glass hover:bg-white/10 text-white font-medium transition-all hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl glass hover:bg-white/10 text-white font-medium transition-[transform,background] hover:scale-105 active:scale-95"
                 >
                   More Info
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleWatchlist({ ...item, media_type: type }); }}
-                  className="p-2.5 rounded-xl glass hover:bg-white/10 transition-all hover:scale-110 active:scale-90"
+                  className="p-2.5 rounded-xl glass hover:bg-white/10 transition-[transform,background] hover:scale-110 active:scale-90"
                 >
                   {saved ? (
                     <Check width={20} height={20} className="text-emerald-400" />
@@ -216,7 +216,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
                         onClick={() => { navigate(`/title/${mediaTypeOf(rec)}/${rec.id}`); onClose(); }}
                         className="flex-shrink-0 w-28 group text-left"
                       >
-                        <div className="aspect-[2/3] rounded-xl overflow-hidden bg-zinc-800 mb-2 group-hover:ring-2 ring-violet-500 transition-all">
+                        <div className="aspect-[2/3] rounded-xl overflow-hidden bg-zinc-800 mb-2 group-hover:ring-2 ring-violet-500 transition-shadow">
                           {rec.poster_path ? (
                             <img
                               src={IMG.poster(rec.poster_path, "w200")}

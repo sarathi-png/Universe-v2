@@ -21,7 +21,7 @@ export default function CastRow({ cast }: { cast: CastMember[] }) {
           transition={{ delay: i * 0.03, duration: 0.3 }}
           className="w-20 shrink-0 text-center"
         >
-          <div className="mx-auto mb-1.5 h-16 w-16 overflow-hidden rounded-full ring-1 ring-white/10 transition-all hover:ring-violet-500/50 hover:scale-110">
+          <div className="mx-auto mb-1.5 h-16 w-16 overflow-hidden rounded-full ring-1 ring-white/10 transition-[transform,box-shadow] hover:ring-violet-500/50 hover:scale-110">
             {person.profile_path ? (
               <img
                 src={IMG.profile(person.profile_path)}

@@ -37,7 +37,7 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
 
         <button
           onClick={() => scroll(-1)}
-          className="absolute left-0 top-0 z-30 hidden h-full w-12 items-center justify-center bg-gradient-to-r from-black/80 to-transparent opacity-0 transition group-hover/row:opacity-100 md:flex"
+          className="absolute left-0 top-0 z-30 hidden h-full w-12 items-center justify-center bg-gradient-to-r from-black/80 to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 md:flex"
         >
           <ChevronLeft width={28} height={28} />
         </button>
@@ -73,7 +73,7 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
         </div>
         <button
           onClick={() => scroll(1)}
-          className="absolute right-0 top-0 z-30 hidden h-full w-12 items-center justify-center bg-gradient-to-l from-black/80 to-transparent opacity-0 transition group-hover/row:opacity-100 md:flex"
+          className="absolute right-0 top-0 z-30 hidden h-full w-12 items-center justify-center bg-gradient-to-l from-black/80 to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 md:flex"
         >
           <ChevronRight width={28} height={28} />
         </button>

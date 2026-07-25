@@ -34,9 +34,9 @@ export const smoothOut = rm({
 } as Transition);
 
 export const pageEnter: Variants = {
-  initial: { opacity: 0, scale: 0.97, filter: "blur(4px)" },
-  animate: { opacity: 1, scale: 1, filter: "blur(0px)", transition: smooth },
-  exit: { opacity: 0, scale: 0.96, filter: "blur(4px)", transition: smoothOut },
+  initial: { opacity: 0, scale: 0.97 },
+  animate: { opacity: 1, scale: 1, transition: smooth },
+  exit: { opacity: 0, scale: 0.96, transition: smoothOut },
 };
 
 export const staggerContainer: Variants = {
@@ -91,26 +91,6 @@ export const magnetic = (x: number, y: number): Variants => ({
   initial: { x: 0, y: 0 },
   animate: { x, y, transition: spring },
 });
-
-export const heroTextStagger: Variants = {
-  initial: {},
-  animate: {
-    transition: {
-      staggerChildren: 0.025,
-      delayChildren: 0.3,
-    },
-  },
-};
-
-export const heroChar: Variants = {
-  initial: { opacity: 0, y: 40, rotateX: -20 },
-  animate: {
-    opacity: 1,
-    y: 0,
-    rotateX: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-  },
-};
 
 export const shimmerKeyframes = {
   initial: { backgroundPosition: "200% 0" },

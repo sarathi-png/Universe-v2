@@ -89,7 +89,7 @@ export default function MediaCard({ item, rank }: Props) {
           ref={magnetic.ref as React.Ref<HTMLButtonElement>}
           style={{ x: magnetic.x, y: magnetic.y }}
           onMouseMove={magnetic.onMouseMove}
-          className="group relative aspect-[2/3] w-[168px] shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 transition-all duration-300 hover:ring-violet-500/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]"
+          className="group relative aspect-[2/3] w-[168px] shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 transition-shadow duration-300 hover:ring-violet-500/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]"
         >
           <LazyImage
             src={IMG.poster(item.poster_path)}
@@ -144,7 +144,7 @@ export default function MediaCard({ item, rank }: Props) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={watch}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black transition hover:scale-105"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black transition-transform hover:scale-105"
                 >
                   <Play width={18} height={18} />
                 </button>
@@ -153,7 +153,7 @@ export default function MediaCard({ item, rank }: Props) {
                     e.stopPropagation();
                     toggleWatchlist({ ...item, media_type: type });
                   }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 transition hover:border-white"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 transition-colors hover:border-white"
                 >
                   {saved ? (
                     <Check width={16} height={16} className="text-emerald-400" />

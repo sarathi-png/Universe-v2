@@ -39,10 +39,16 @@ export default function Home() {
   return (
     <div className="relative pb-20 md:pb-10">
       <ParticleCanvas
-        count={35}
-        maxSpeed={0.5}
-        colors={["139, 92, 246", "6, 182, 212", "167, 139, 250"]}
-        interactive={false}
+        count={70}
+        maxSpeed={0.8}
+        colors={[
+          "139, 92, 246",
+          "6, 182, 212",
+          "217, 70, 239",
+          "244, 63, 94",
+          "167, 139, 250",
+        ]}
+        interactive
         className="z-0"
       />
       <div className="relative z-10">
