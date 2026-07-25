@@ -1,20 +1,21 @@
 import NodeCache from "node-cache";
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
+const TMDB_BEARER_TOKEN = process.env.TMDB_BEARER_TOKEN || "";
 const BASE_URL = "https://api.themoviedb.org/3";
-const BEARER_TOKEN = process.env.TMDB_BEARER_TOKEN || (TMDB_API_KEY ? `Bearer ${TMDB_API_KEY}` : "");
 
 const cache = new NodeCache({ stdTTL: 300, maxKeys: 500 });
 
-const AUTH_HEADERS: Record<string, string> = BEARER_TOKEN
-  ? { accept: "application/json", Authorization: `Bearer ${TMDB_API_KEY}` }
+const USE_BEARER = !!TMDB_BEARER_TOKEN;
+const AUTH_HEADERS: Record<string, string> = USE_BEARER
+  ? { accept: "application/json", Authorization: `Bearer ${TMDB_BEARER_TOKEN}` }
   : { accept: "application/json" };
 
 export async function fetchTMDB<T>(
   endpoint: string,
   params: Record<string, string> = {}
 ): Promise<T> {
-  const query = new URLSearchParams(params);
+  const query = new URLSearchParams(USE_BEARER ? params : { api_key: TMDB_API_KEY, ...params });
   const url = `${BASE_URL}${endpoint}${query.toString() ? `?${query.toString()}` : ""}`;
 
   const cached = cache.get<T>(url);
