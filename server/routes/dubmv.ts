@@ -97,6 +97,7 @@ dubmvRouter.get("/popular", (_req, res) => {
         directUrl: found?.directUrl || null,
         fileId: found?.fileId || null,
         quality: found?.quality || null,
+        duration: found?.duration || null,
         cached: !!found,
         posterUrl: bestPoster,
       };

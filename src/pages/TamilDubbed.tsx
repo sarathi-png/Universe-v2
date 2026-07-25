@@ -138,15 +138,14 @@ export default function TamilDubbed() {
 
   const cachedWithDuration = cached.filter((item: any) => {
     const duration = item.duration || '';
+    if (!duration) return true; // no duration info = assume playable
     return parseDuration(duration) > 40;
   });
 
   const extraCachedWithDuration = extraCached.filter(entry => {
     const duration = entry.duration || '';
-    const posterValid = entry.posterUrl?.startsWith('http') || 
-                       (entry.posterUrl?.startsWith('/') && entry.posterUrl.includes('/shots/')) ||
-                       false;
-    return parseDuration(duration) > 40 && posterValid;
+    if (parseDuration(duration) > 0 && parseDuration(duration) <= 40) return false;
+    return true;
   });
 
   const filteredCached = cachedWithDuration;

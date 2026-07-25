@@ -32,6 +32,7 @@ export interface DubmvPopularItem {
   directUrl: string | null;
   fileId: number | null;
   quality: string | null;
+  duration: string | null;
   cached: boolean;
   posterUrl: string | null;
   posterPath: string | null;
