@@ -1,5 +1,7 @@
 import { Router } from "express";
+import axios from "axios";
 import { scrapeTopicById, searchQuery, searchTamilmv } from "../services/tamilmvScraper.js";
+import { searchAllV2 } from "../services/scrapers.js";
 
 export const tamilmvRouter = Router();
 
@@ -29,22 +31,56 @@ tamilmvRouter.get("/sources/:tmdbId", async (req, res) => {
       res.status(400).json({ error: "Invalid TMDB ID" });
       return;
     }
-    const result = await searchTamilmv(tmdbId, type as "movie" | "tv");
-    if (!result || !result.torrents.length) {
-      res.json({ tmdbId, sources: [] });
-      return;
+
+    const sources: { magnet: string; quality: string; size: string; label: string; languages: string[] }[] = [];
+
+    // 1. Try 1TamilMV first (Tamil dubbed content)
+    try {
+      const tamilResult = await searchTamilmv(tmdbId, type as "movie" | "tv");
+      if (tamilResult?.torrents?.length) {
+        for (const t of tamilResult.torrents) {
+          sources.push({
+            magnet: t.magnet,
+            quality: t.quality,
+            size: t.size,
+            label: "Tamil Torrent",
+            languages: t.languages,
+          });
+        }
+      }
+    } catch {}
+
+    // 2. If few or no TamilMV sources, also search general scrapers (YTS etc.)
+    if (sources.length < 3) {
+      try {
+        const tmdbRes = await axios.get(
+          `https://api.themoviedb.org/3/${type}/${tmdbId}`,
+          { params: { api_key: process.env.TMDB_API_KEY }, timeout: 5000 }
+        );
+        const title = type === "movie" ? tmdbRes.data.title : tmdbRes.data.name;
+        const year = (type === "movie" ? tmdbRes.data.release_date : tmdbRes.data.first_air_date)?.split("-")[0];
+        if (title) {
+          const searchQuery = year ? `${title} ${year}` : title;
+          const scraped = await searchAllV2(searchQuery, { limit: 15 });
+          for (const t of scraped) {
+            const already = sources.some((s) => s.magnet === t.magnet);
+            if (!already && t.seeds > 0) {
+              sources.push({
+                magnet: t.magnet,
+                quality: t.quality,
+                size: t.size,
+                label: "Torrent",
+                languages: t.languages,
+              });
+            }
+          }
+        }
+      } catch {}
     }
-    const sources = result.torrents.map((t) => ({
-      magnet: t.magnet,
-      quality: t.quality,
-      size: t.size,
-      format: t.format,
-      audio: t.audio,
-      languages: t.languages,
-    }));
-    res.json({ tmdbId, title: result.title, year: result.year, sources });
+
+    res.json({ tmdbId, sources });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch TamilMV sources", message: String(err) });
+    res.status(500).json({ error: "Failed to fetch sources", message: String(err) });
   }
 });
 

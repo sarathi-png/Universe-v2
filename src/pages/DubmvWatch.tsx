@@ -55,14 +55,15 @@ export default function DubmvWatch() {
     retry: 1,
   });
 
-  const tamilmvSources = (tamilmvData?.sources || []) as {
+  const torrentSources = (tamilmvData?.sources || []) as {
     magnet: string;
     quality: string;
     size: string;
+    label: string;
     languages: string[];
   }[];
 
-  // Build all available sources: DUBMV proxy as primary + TamilMV magnets
+  // Build all available sources: DUBMV proxy as primary + torrent magnets
   const allSources = [
     {
       url: dubmvApi.streamUrl(numFileId),
@@ -71,9 +72,9 @@ export default function DubmvWatch() {
       size: activeEntry?.fileSize || "",
       isEmbed: false,
     },
-    ...tamilmvSources.map((s) => ({
+    ...torrentSources.map((s) => ({
       url: `/api/torrent/play?magnet=${encodeURIComponent(s.magnet)}`,
-      label: `Torrent (${s.quality})`,
+      label: `${s.label} (${s.quality})`,
       quality: s.quality,
       size: s.size,
       isEmbed: false,
@@ -197,10 +198,10 @@ export default function DubmvWatch() {
                 <p>Size: {activeEntry.fileSize || "N/A"}</p>
                 <p>Duration: {activeEntry.duration || "N/A"}</p>
                 <p>Quality: {activeEntry.quality}</p>
-                <p>Source: {sourceIdx === 0 ? "IsaiDub / dubmv.xyz" : "1TamilMV (torrent)"}</p>
-                {tamilmvSources.length > 0 && (
+                <p>Source: {sourceIdx === 0 ? "IsaiDub / dubmv.xyz" : allSources[sourceIdx]?.label || "Torrent"}</p>
+                {torrentSources.length > 0 && (
                   <p className="mt-2 text-emerald-400">
-                    + {tamilmvSources.length} torrent source{tamilmvSources.length > 1 ? "s" : ""} available
+                    + {torrentSources.length} torrent source{torrentSources.length > 1 ? "s" : ""} available
                   </p>
                 )}
               </div>
