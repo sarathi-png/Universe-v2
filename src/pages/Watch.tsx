@@ -58,8 +58,8 @@ export default function Watch() {
     setLoadingSources(true);
 
     if (magnetParam) {
-      // Direct magnet play — single source, skip API calls
-      setSources([{
+      // Direct magnet play — add as first source, then fetch API sources as fallback
+      const magnetSource: MediaStreamSource = {
         url: `/api/torrent/play?magnet=${encodeURIComponent(magnetParam)}`,
         directUrl: null,
         name: "Torrent Stream",
@@ -68,9 +68,34 @@ export default function Watch() {
         languages: ["en"],
         isEmbed: false,
         playUrl: null,
-      }]);
-      sourcesLenRef.current = 1;
-      setSubtitles([]);
+      };
+
+      try {
+        const result = await mediaStreamApi.getStream(
+          numId, type as "movie" | "tv",
+          type === "tv" ? season : undefined,
+          type === "tv" ? episode : undefined,
+          streamLang
+        );
+        // Prepend magnet source, then API sources as fallback
+        const allSources = [magnetSource, ...result.sources];
+        setSources(allSources);
+        sourcesLenRef.current = allSources.length;
+        setSubtitles(
+          result.subtitles.map((s, i) => ({
+            id: i,
+            label: s.label,
+            language: s.lang,
+            url: s.url,
+            kind: "subtitles" as const,
+          }))
+        );
+      } catch {
+        // API failed — just use the magnet source alone
+        setSources([magnetSource]);
+        sourcesLenRef.current = 1;
+        setSubtitles([]);
+      }
       setSourceIdx(0);
       sourceIdxRef.current = 0;
       setPlayerKey((k) => k + 1);
@@ -172,24 +197,25 @@ export default function Watch() {
   const hasPrev = episode > 1;
   const hasNext = episode < episodes.length;
 
-  // Auto-fallback: if source doesn't produce progress in 30s, try next
+    // Auto-fallback: if source doesn't produce progress in 60s, try next
   useEffect(() => {
     if (sourcesLenRef.current <= 1) return;
     const current = sources[sourceIdxRef.current];
-    if (current?.isEmbed) return; // embeds don't fire progress events
-    if (current?.playUrl) return; // playUrl sources (transcoding) need more time
+    if (current?.isEmbed) return;
+    if (current?.playUrl) return;
 
     lastProgressTime.current = Date.now();
+    const timeoutMs = current?.provider === "Torrent" ? 90000 : 60000;
     autoFallbackTimer.current = setTimeout(() => {
       const elapsed = Date.now() - lastProgressTime.current;
-      if (elapsed >= 30000 && sourceIdxRef.current < sourcesLenRef.current - 1) {
+      if (elapsed >= timeoutMs && sourceIdxRef.current < sourcesLenRef.current - 1) {
         const nextIdx = sourceIdxRef.current + 1;
         setFailoverMsg(`Source ${sourceIdxRef.current + 1} timed out, trying next...`);
         setSourceIdx(nextIdx);
         sourceIdxRef.current = nextIdx;
         setPlayerKey((k) => k + 1);
       }
-    }, 30000);
+    }, timeoutMs);
     return () => clearTimeout(autoFallbackTimer.current);
   }, [playerKey, sources]);
 

@@ -8,6 +8,11 @@ import { ChevronLeft, Play, Info } from "../components/icons";
 import LazyImage from "../components/LazyImage";
 import { staggerContainer, staggerItem } from "../styles/animationPresets";
 
+function parseSizeGB(size: string): number {
+  const m = size.match(/^([\d.]+)\s*(GB|GiB)$/i);
+  return m ? parseFloat(m[1]) : 0;
+}
+
 export default function Sources() {
   const { type, id } = useParams<{ type: MediaType; id: string }>();
   const navigate = useNavigate();
@@ -24,8 +29,17 @@ export default function Sources() {
     setQuery(q);
     (async () => {
       try {
-        const res = await mediaStreamApi.searchV2(q, { limit: 10 });
-        setResults(res.results || []);
+        const res = await mediaStreamApi.searchV2(q, { limit: 15 });
+        let list = res.results || [];
+        // Sort: prefer 1080p/720p over 2160p when seeds are similar
+        const qualityOrder: Record<string, number> = { "1080p": 0, "720p": 1, "2160p": 2, "4K": 2, "HD": 3 };
+        list.sort((a: any, b: any) => {
+          const aOrder = qualityOrder[a.quality] ?? 99;
+          const bOrder = qualityOrder[b.quality] ?? 99;
+          if (aOrder !== bOrder) return aOrder - bOrder;
+          return (b.seeds || 0) - (a.seeds || 0);
+        });
+        setResults(list);
       } catch {
         setResults([]);
       }
@@ -107,8 +121,8 @@ export default function Sources() {
                     <span className="rounded bg-violet-600/20 px-2 py-0.5 text-[11px] font-semibold text-violet-300">
                       {t.source || "Torrent"}
                     </span>
-                    <span className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-semibold">
-                      {t.quality}
+                    <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${t.quality === '2160p' || t.quality === '4K' ? 'bg-rose-600/20 text-rose-300' : 'bg-white/10'}`}>
+                      {t.quality === '2160p' || t.quality === '4K' ? '⚠ ' : ''}{t.quality}
                     </span>
                     {t.languages?.map((l: string) => (
                       <span key={l} className="rounded bg-emerald-600/20 px-2 py-0.5 text-[11px] text-emerald-300 uppercase">
@@ -118,7 +132,7 @@ export default function Sources() {
                   </div>
                   <p className="mt-1 truncate text-sm font-medium">{t.name}</p>
                   <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
-                    <span>{t.size || "N/A"}</span>
+                    <span className={t.size && parseSizeGB(t.size) > 5 ? 'text-rose-400 font-semibold' : ''}>{t.size || "N/A"}</span>
                     <span>⚡ {t.seeds || 0} seeds</span>
                   </div>
                 </div>
@@ -137,6 +151,14 @@ export default function Sources() {
               >
                 Or use mirror sources instead
               </button>
+            </div>
+            <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-zinc-400">
+              <p className="font-semibold text-amber-300 mb-1">Streaming Tips</p>
+              <ul className="space-y-1">
+                <li>• Prefer <strong>1080p</strong> or <strong>720p</strong> for smoother playback — 4K files are large and may buffer.</li>
+                <li>• Files over 5 GB may take time to start streaming.</li>
+                <li>• If torrent playback stalls, try "mirror sources" above instead.</li>
+              </ul>
             </div>
           </motion.div>
         )}
