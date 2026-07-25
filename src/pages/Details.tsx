@@ -19,21 +19,9 @@ export default function Details() {
   const { type, id } = useParams<{ type: MediaType; id: string }>();
   const navigate = useNavigate();
   const numId = Number(id);
-  const { data, isLoading, isError } = useDetails(type as MediaType, numId);
+  const { data, isLoading } = useDetails(type as MediaType, numId);
   const { toggleWatchlist, inWatchlist } = useStore();
   const [tab, setTab] = useState<"overview" | "cast" | "reviews">("overview");
-
-  if (isError) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center pt-16 text-zinc-500">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-red-500">
-          <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
-        </svg>
-        <p className="text-lg font-semibold text-red-400">Failed to load details</p>
-        <p className="mt-1 text-sm text-zinc-500">Could not fetch title information. Please try again.</p>
-      </div>
-    );
-  }
 
   if (isLoading || !data) {
     return (
@@ -73,8 +61,8 @@ export default function Details() {
           alt={title(data)}
           className="h-full w-full"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-nova-950 via-nova-950/40 to-black/50" />
-        <div className="absolute inset-0 bg-gradient-to-r from-nova-950 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-[#050507]/40 to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050507] via-transparent to-transparent" />
         <div className="pointer-events-none absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-violet-700/20 blur-[140px]" />
 
         <div className="absolute bottom-0 w-full px-4 md:px-10">

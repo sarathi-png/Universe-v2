@@ -194,7 +194,7 @@ export default function MediaCard({ item, rank }: Props) {
                         "TV-PG": "border-yellow-500/30 text-yellow-400",
                         "TV-14": "border-orange-500/30 text-orange-400",
                         "TV-MA": "border-red-500/30 text-red-400",
-                      }[certification] || "border-white/20 text-white/70"
+                      }[certification] || "border-white/20 text-white/60"
                     }`}>
                       {certification}
                     </span>

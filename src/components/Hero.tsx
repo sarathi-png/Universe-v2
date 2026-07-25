@@ -103,11 +103,11 @@ export default function Hero({ items }: { items: MediaItem[] }) {
 
       {/* Parallax glow layers */}
       <motion.div
-        className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float-glow z-10 will-change-transform"
+        className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float-glow z-[1] will-change-transform"
         style={{ y: glowY1 }}
       />
       <motion.div
-        className="pointer-events-none absolute bottom-0 right-10 h-80 w-80 rounded-full bg-fuchsia-600/15 blur-[120px] animate-float-glow z-10 will-change-transform"
+        className="pointer-events-none absolute bottom-0 right-10 h-80 w-80 rounded-full bg-fuchsia-600/15 blur-[120px] animate-float-glow z-[1] will-change-transform"
         style={{ y: glowY2 }}
       />
 
@@ -119,7 +119,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-40"
+            className="absolute inset-0 z-[5]"
           >
             <iframe
               src={`https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${videoKey}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1`}
@@ -133,14 +133,14 @@ export default function Hero({ items }: { items: MediaItem[] }) {
               title="Trailer preview"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-nova-950 via-transparent to-black/40" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-black/40" />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Base gradients */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent pointer-events-none z-20" />
-      <div className="absolute inset-0 bg-gradient-to-t from-nova-950 via-transparent to-black/40 pointer-events-none z-20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent pointer-events-none z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-black/40 pointer-events-none z-[2]" />
 
       {/* Content */}
       <div className="absolute inset-0 z-10 flex items-center">

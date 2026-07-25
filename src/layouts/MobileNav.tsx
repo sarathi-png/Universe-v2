@@ -12,7 +12,7 @@ export default function MobileNav() {
     { to: "/watchlist", label: "List", Icon: Bookmark },
   ];
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[var(--z-nav)] glass-strong md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-[60] glass-strong md:hidden">
       <div className="flex items-center justify-around px-2 py-2">
         {items.map(({ to, label, Icon }) => {
           const active = loc.pathname === to;

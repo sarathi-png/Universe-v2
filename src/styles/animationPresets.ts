@@ -1,11 +1,11 @@
 import type { Transition, Variants } from "framer-motion";
 
-export function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+const mql = typeof window !== "undefined"
+  ? window.matchMedia("(prefers-reduced-motion: reduce)")
+  : null;
+const prefersReducedMotion = () => mql?.matches ?? false;
 
-export function rm<T extends Transition>(t: T): T {
+function rm<T extends Transition>(t: T): T {
   return prefersReducedMotion() ? ({ duration: 0 } as T) : t;
 }
 

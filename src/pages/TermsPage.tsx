@@ -12,7 +12,7 @@ export default function TermsPage() {
     >
       <h1 className="mb-8 text-3xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>Terms of Service</h1>
 
-      <div className="space-y-6 text-sm leading-relaxed text-white/70">
+      <div className="space-y-6 text-sm leading-relaxed text-white/60">
         <section>
           <h2 className="mb-2 text-lg font-semibold text-white">Acceptance of Terms</h2>
           <p>

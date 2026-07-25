@@ -37,7 +37,7 @@ export default function ContentRatingBadge({ data, mediaType }: Props) {
   const certification = getCertification(data, mediaType);
   if (!certification) return null;
 
-  const colorClass = RATING_COLORS[certification] || "bg-white/10 text-white/70 border-white/20";
+  const colorClass = RATING_COLORS[certification] || "bg-white/10 text-white/60 border-white/20";
 
   return (
     <span className={`rounded-md border px-2.5 py-0.5 text-xs font-bold ${colorClass}`}>

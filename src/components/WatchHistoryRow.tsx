@@ -89,7 +89,7 @@ export default function WatchHistoryRow({ items }: { items: HistoryItem[] }) {
         })}
       </div>
       {items.length === 0 && (
-        <p className="px-4 text-sm text-zinc-500 md:px-10">
+        <p className="px-4 text-sm text-zinc-600 md:px-10">
           Nothing watched yet — start browsing and your history will appear here.
         </p>
       )}
