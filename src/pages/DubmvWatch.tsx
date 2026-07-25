@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { dubmvApi } from "../api/dubmv";
@@ -13,6 +14,7 @@ export default function DubmvWatch() {
   const location = useLocation();
   const numFileId = Number(fileId);
   const { upsertProgress } = useStore();
+  const [sourceIdx, setSourceIdx] = useState(0);
 
   const passedEntry = (location.state as { entry?: any })?.entry;
 
@@ -41,7 +43,45 @@ export default function DubmvWatch() {
     staleTime: 1000 * 60 * 10,
   });
 
-  const videoUrl = dubmvApi.streamUrl(numFileId);
+  // Fetch TamilMV torrent sources for this movie
+  const { data: tamilmvData } = useQuery({
+    queryKey: ["tamilmv-sources", tmdbId, activeEntry?.type],
+    queryFn: async () => {
+      const res = await fetch(`/api/tamilmv/sources/${tmdbId}?type=${activeEntry!.type}`);
+      return res.json();
+    },
+    enabled: !!tmdbId && !!activeEntry,
+    staleTime: 1000 * 60 * 10,
+    retry: 1,
+  });
+
+  const tamilmvSources = (tamilmvData?.sources || []) as {
+    magnet: string;
+    quality: string;
+    size: string;
+    languages: string[];
+  }[];
+
+  // Build all available sources: DUBMV proxy as primary + TamilMV magnets
+  const allSources = [
+    {
+      url: dubmvApi.streamUrl(numFileId),
+      label: "Direct Stream",
+      quality: activeEntry?.quality || "HD",
+      size: activeEntry?.fileSize || "",
+      isEmbed: false,
+    },
+    ...tamilmvSources.map((s) => ({
+      url: `/api/torrent/play?magnet=${encodeURIComponent(s.magnet)}`,
+      label: `Torrent (${s.quality})`,
+      quality: s.quality,
+      size: s.size,
+      isEmbed: false,
+    })),
+  ];
+
+  const currentSource = allSources[sourceIdx] || allSources[0];
+  const playerKey = `${numFileId}-${sourceIdx}`;
 
   if (isLoading || !activeEntry) {
     return (
@@ -67,8 +107,8 @@ export default function DubmvWatch() {
         <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
           <div>
             <Player
-              key={numFileId}
-              src={videoUrl}
+              key={playerKey}
+              src={currentSource.url}
               poster={tmdbData ? IMG.backdrop(tmdbData.backdrop_path, "w780") : undefined}
               title={activeEntry.title}
               onProgress={(p) => {
@@ -82,6 +122,26 @@ export default function DubmvWatch() {
                 }
               }}
             />
+
+            {allSources.length > 1 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {allSources.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSourceIdx(i)}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+                      i === sourceIdx
+                        ? "border-violet-500 bg-violet-500/20 text-white"
+                        : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
+                    }`}
+                  >
+                    <span className={`h-2 w-2 rounded-full shadow-[0_0_8px] ${i === 0 ? "bg-amber-400 shadow-amber-400" : "bg-emerald-400 shadow-emerald-400"}`} />
+                    <span className="font-semibold">{s.label}</span>
+                    {s.size && <span className="text-[10px] text-zinc-500">{s.size}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <h1 className="text-xl font-bold md:text-2xl" style={{ fontFamily: "var(--font-display)" }}>{activeEntry.title}</h1>
@@ -137,7 +197,12 @@ export default function DubmvWatch() {
                 <p>Size: {activeEntry.fileSize || "N/A"}</p>
                 <p>Duration: {activeEntry.duration || "N/A"}</p>
                 <p>Quality: {activeEntry.quality}</p>
-                <p>Source: IsaiDub / dubmv.xyz</p>
+                <p>Source: {sourceIdx === 0 ? "IsaiDub / dubmv.xyz" : "1TamilMV (torrent)"}</p>
+                {tamilmvSources.length > 0 && (
+                  <p className="mt-2 text-emerald-400">
+                    + {tamilmvSources.length} torrent source{tamilmvSources.length > 1 ? "s" : ""} available
+                  </p>
+                )}
               </div>
             </div>
 
