@@ -155,19 +155,6 @@
   animation: float-glow 6s ease-in-out infinite;
 }
 
-@keyframes ken-burns {
-  0% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@utility animate-ken-burns {
-  animation: ken-burns 12s ease-out forwards;
-}
-
 @keyframes pulse-ring {
   0% {
     box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5);

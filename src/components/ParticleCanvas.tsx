@@ -28,6 +28,14 @@ const DEFAULT_COLORS = [
   "167, 139, 250",
 ];
 
+function deviceAwareCount(requested: number): number {
+  const cores = navigator.hardwareConcurrency || 4;
+  const isMobile = window.innerWidth < 768;
+  const cap = isMobile ? 35 : 70;
+  const byCores = cores <= 2 ? 25 : cores <= 4 ? 45 : cap;
+  return Math.min(requested, byCores, cap);
+}
+
 export default function ParticleCanvas({
   count = 60,
   colors = DEFAULT_COLORS,
@@ -35,6 +43,7 @@ export default function ParticleCanvas({
   className = "",
   interactive = true,
 }: ParticleCanvasProps) {
+  const effectiveCount = deviceAwareCount(count);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animRef = useRef<number>(0);
@@ -105,7 +114,7 @@ export default function ParticleCanvas({
     const w = () => canvas.clientWidth;
     const h = () => canvas.clientHeight;
 
-    particlesRef.current = Array.from({ length: count }, () => initParticle(w(), h()));
+    particlesRef.current = Array.from({ length: effectiveCount }, () => initParticle(w(), h()));
 
     const animate = () => {
       if (!isVisibleRef.current || !isFocusedRef.current) {
@@ -167,7 +176,7 @@ export default function ParticleCanvas({
       mql.removeEventListener("change", onMotionChange);
       clearTimeout(resizeTimerRef.current);
     };
-  }, [count, colors, maxSpeed, initParticle, interactive]);
+  }, [effectiveCount, colors, maxSpeed, initParticle, interactive]);
 
   const onMouse = useCallback((e: React.MouseEvent) => {
     const canvas = canvasRef.current;

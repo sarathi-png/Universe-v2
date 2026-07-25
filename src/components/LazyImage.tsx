@@ -44,7 +44,7 @@ export default function LazyImage({
         onLoad={onLoad}
         onError={onError}
         className={cn(
-          "h-full w-full object-cover transition-[opacity,transform] duration-[800ms] ease-out",
+          "h-full w-full object-cover transition-[opacity,transform] duration-[800ms] ease-out will-change-transform",
           loaded ? "opacity-100 scale-100" : "opacity-0 scale-[1.03]"
         )}
         {...rest}

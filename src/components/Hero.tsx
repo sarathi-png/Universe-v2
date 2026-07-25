@@ -96,18 +96,18 @@ export default function Hero({ items }: { items: MediaItem[] }) {
           <LazyImage
             src={IMG.backdrop(m.backdrop_path)}
             alt={title(m)}
-            className="h-full w-full animate-ken-burns"
+            className="h-full w-full"
           />
         </motion.div>
       </AnimatePresence>
 
       {/* Parallax glow layers */}
       <motion.div
-        className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float-glow z-[1]"
+        className="pointer-events-none absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float-glow z-[1] will-change-transform"
         style={{ y: glowY1 }}
       />
       <motion.div
-        className="pointer-events-none absolute bottom-0 right-10 h-80 w-80 rounded-full bg-fuchsia-600/15 blur-[120px] animate-float-glow z-[1]"
+        className="pointer-events-none absolute bottom-0 right-10 h-80 w-80 rounded-full bg-fuchsia-600/15 blur-[120px] animate-float-glow z-[1] will-change-transform"
         style={{ y: glowY2 }}
       />
 

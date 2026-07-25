@@ -15,7 +15,7 @@ import { Play, PlusIcon, Check, Star, Info } from "./icons";
 import { getCertification } from "./ContentRatingBadge";
 import { useCardModal } from "./CardModalProvider";
 import { useMagnetic } from "../hooks/useMagnetic";
-import { spring } from "../styles/animationPresets";
+import { smooth } from "../styles/animationPresets";
 
 interface Props {
   item: MediaItem;
@@ -111,7 +111,7 @@ export default function MediaCard({ item, rank }: Props) {
             initial={{ opacity: 0, scale: 0.85, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 8 }}
-            transition={spring}
+            transition={smooth}
             onClick={open}
             className="absolute -left-6 -top-6 z-50 hidden w-72 cursor-pointer overflow-hidden rounded-2xl glass-strong shadow-2xl shadow-black/70 md:block"
           >
