@@ -126,22 +126,34 @@ export default function DubmvWatch() {
 
             {allSources.length > 1 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {allSources.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSourceIdx(i)}
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
-                      i === sourceIdx
-                        ? "border-violet-500 bg-violet-500/20 text-white"
-                        : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
-                    }`}
-                  >
-                    <span className={`h-2 w-2 rounded-full shadow-[0_0_8px] ${i === 0 ? "bg-amber-400 shadow-amber-400" : "bg-emerald-400 shadow-emerald-400"}`} />
-                    <span className="font-semibold">{s.label}</span>
-                    {s.size && <span className="text-[10px] text-zinc-500">{s.size}</span>}
-                  </button>
-                ))}
+                {allSources.map((s, i) => {
+                  const isTamil = s.label.includes("Tamil");
+                  const isActive = i === sourceIdx;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSourceIdx(i)}
+                      className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition ${
+                        isActive
+                          ? "border-violet-500 bg-violet-500/20 text-white"
+                          : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full shadow-[0_0_8px] ${i === 0 ? "bg-amber-400 shadow-amber-400" : isTamil ? "bg-emerald-400 shadow-emerald-400" : "bg-sky-400 shadow-sky-400"}`} />
+                      <span className="font-semibold">{s.label}</span>
+                      {isTamil && (
+                        <span className="rounded bg-emerald-600/20 px-1 text-[10px] font-semibold text-emerald-300 uppercase">TA</span>
+                      )}
+                      {s.size && <span className="text-[10px] text-zinc-500">{s.size}</span>}
+                    </button>
+                  );
+                })}
               </div>
+            )}
+            {allSources.length > 1 && sourceIdx > 0 && (
+              <p className="mt-2 text-[11px] text-amber-400/70">
+                Tip: Direct Stream plays instantly. Torrent sources may buffer depending on network.
+              </p>
             )}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -199,6 +211,9 @@ export default function DubmvWatch() {
                 <p>Duration: {activeEntry.duration || "N/A"}</p>
                 <p>Quality: {activeEntry.quality}</p>
                 <p>Source: {sourceIdx === 0 ? "IsaiDub / dubmv.xyz" : allSources[sourceIdx]?.label || "Torrent"}</p>
+                {sourceIdx > 0 && (
+                  <p className="text-emerald-400">Language: {torrentSources[sourceIdx - 1]?.languages?.join(", ").toUpperCase() || "Unknown"}</p>
+                )}
                 {torrentSources.length > 0 && (
                   <p className="mt-2 text-emerald-400">
                     + {torrentSources.length} torrent source{torrentSources.length > 1 ? "s" : ""} available
