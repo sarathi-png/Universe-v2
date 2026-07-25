@@ -113,6 +113,10 @@ dubmvRouter.get("/popular", (_req, res) => {
 dubmvRouter.post("/scrape/:fileId", async (req, res) => {
   try {
     const fileId = parseInt(req.params.fileId);
+    if (isNaN(fileId) || fileId <= 0) {
+      res.status(400).json({ error: "Invalid fileId" });
+      return;
+    }
     const entry = await scrapeSingleFile(fileId);
     if (!entry) {
       res.status(404).json({ error: "No content found at that ID" });
@@ -121,13 +125,20 @@ dubmvRouter.post("/scrape/:fileId", async (req, res) => {
     addEntry(entry);
     res.json(entry);
   } catch (err) {
+    console.error("[dubmv:scrape]", err);
     res.status(500).json({ error: "Scrape failed", message: String(err) });
   }
 });
 
+const ALLOWED_PROXY_DOMAINS = ["dub.onestream.today"];
+
 dubmvRouter.get("/proxy/:fileId", async (req, res) => {
   try {
     const fileId = req.params.fileId;
+    if (!/^\d+$/.test(fileId)) {
+      res.status(400).json({ error: "Invalid fileId (must be numeric)" });
+      return;
+    }
     const streamUrl = `https://dub.onestream.today/stream/video/${fileId}`;
     const headers = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -149,6 +160,19 @@ dubmvRouter.get("/proxy/:fileId", async (req, res) => {
       return;
     }
     const videoUrl = srcMatch[1];
+
+    // Validate video URL hostname against allowlist
+    try {
+      const parsed = new URL(videoUrl);
+      if (!ALLOWED_PROXY_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith("." + d))) {
+        console.warn(`[dubmv:proxy] Blocked video URL (domain not in allowlist): ${videoUrl}`);
+        res.status(502).json({ error: "Video source domain not allowed" });
+        return;
+      }
+    } catch {
+      res.status(400).json({ error: "Invalid video URL from upstream" });
+      return;
+    }
 
     // Step 3: build upstream headers, forwarding Range from client
     const videoHeaders: Record<string, string> = {

@@ -21,17 +21,18 @@ export default function Sources() {
 
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (!data) return;
     const q = `${title(data)} ${data.release_date?.slice(0, 4) || ""}`;
     setQuery(q);
+    setFetchError(null);
     (async () => {
       try {
         const res = await mediaStreamApi.searchV2(q, { limit: 15 });
         let list = res.results || [];
-        // Sort: prefer 1080p/720p over 2160p when seeds are similar
         const qualityOrder: Record<string, number> = { "1080p": 0, "720p": 1, "2160p": 2, "4K": 2, "HD": 3 };
         list.sort((a: any, b: any) => {
           const aOrder = qualityOrder[a.quality] ?? 99;
@@ -40,7 +41,9 @@ export default function Sources() {
           return (b.seeds || 0) - (a.seeds || 0);
         });
         setResults(list);
-      } catch {
+      } catch (err: any) {
+        console.error("[Sources] search failed:", err);
+        setFetchError(err?.message || "Search request failed");
         setResults([]);
       }
       setLoading(false);
@@ -73,7 +76,25 @@ export default function Sources() {
           </div>
         )}
 
-        {loading ? (
+        {fetchError ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-4 py-20 text-zinc-500"
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+              <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <p className="text-lg font-semibold text-red-400">Search failed</p>
+            <p className="text-sm text-zinc-500">{fetchError}</p>
+            <button
+              onClick={() => navigate(`/watch/${type}/${numId}`)}
+              className="rounded-full bg-violet-600 px-6 py-2 text-sm font-bold text-white transition hover:bg-violet-500"
+            >
+              Use Mirror Sources Instead
+            </button>
+          </motion.div>
+        ) : loading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <motion.div

@@ -1,12 +1,27 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import createHttpsProxyAgent from "https-proxy-agent";
+import { readFileSync } from "fs";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "";
 const proxyConfig = proxyUrl ? { httpsAgent: createHttpsProxyAgent(proxyUrl), proxy: false as const } : {};
 
 const http = axios.create({ timeout: 15000, validateStatus: () => true, ...proxyConfig });
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+const CONFIG_PATH = resolve(__dirname, "../config/domains.json");
+function ytsBaseUrl(): string {
+  try {
+    const cfg = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as any;
+    return cfg.yts?.baseUrl || "https://yts.gg";
+  } catch {
+    return "https://yts.gg";
+  }
+}
 
 const TRACKERS = [
   "udp://tracker.opentrackr.org:1337/announce",
@@ -95,7 +110,7 @@ function qualityRank(q: string): number {
 
 async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
   try {
-    const url = `https://yts.gg/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&sort_by=seeders&limit=30`;
+    const url = `${ytsBaseUrl()}/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&sort_by=seeders&limit=30`;
     const { data } = await http.get(url);
     const movies = data?.data?.movies;
     if (!Array.isArray(movies)) return [];
@@ -391,8 +406,8 @@ export interface SearchOptions {
 }
 
 /**
- * Try providers in priority order, stop at the first that returns results.
- * Chain: YTS → TPB → LimeTorrents → 1337x → EZTV → TSA (torrent-search-api)
+ * Run all scrapers concurrently with a per-scraper timeout of 10s,
+ * then merge and deduplicate results.
  */
 export async function searchAllV2(query: string, options: SearchOptions = {}): Promise<ScrapedTorrent[]> {
   const { quality, lang, limit = 30 } = options;
@@ -402,7 +417,7 @@ export async function searchAllV2(query: string, options: SearchOptions = {}): P
     searchQuery = `${query} ${quality}`;
   }
 
-  const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
+  const scrapers: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
     { name: "YTS", scrape: searchYTS },
     { name: "TPB", scrape: searchTPB },
     { name: "LimeTorrents", scrape: searchLimeTorrents },
@@ -411,17 +426,28 @@ export async function searchAllV2(query: string, options: SearchOptions = {}): P
     { name: "TSA", scrape: searchTSA },
   ];
 
-  for (const scraper of chain) {
-    console.log(`[searchV2] Trying ${scraper.name}...`);
-    const results = await scraper.scrape(searchQuery);
-    if (results.length > 0) {
-      console.log(`[searchV2] ${scraper.name} returned ${results.length} results — stopping chain`);
-      return applyFilters(results, quality, lang, limit);
+  const timeout = (ms: number) => new Promise<ScrapedTorrent[]>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms));
+
+  const results = await Promise.allSettled(
+    scrapers.map((s) =>
+      Promise.race([s.scrape(searchQuery), timeout(10000)])
+        .then((r) => ({ name: s.name, results: r }))
+        .catch((err) => {
+          console.error(`[searchV2] ${s.name} failed:`, err?.message || err);
+          return { name: s.name, results: [] as ScrapedTorrent[] };
+        })
+    )
+  );
+
+  const all: ScrapedTorrent[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled") {
+      all.push(...r.value.results);
     }
-    console.log(`[searchV2] ${scraper.name} returned 0 — falling through`);
   }
 
-  return [];
+  console.log(`[searchV2] ${scrapers.length} scrapers returned ${all.length} total results`);
+  return applyFilters(all, quality, lang, limit);
 }
 
 function applyFilters(
@@ -460,7 +486,7 @@ export async function searchAllV2Debug(query: string): Promise<{
   scrapers: Record<string, { status: string; count: number; error?: string }>;
   total: number;
 }> {
-  const scrapers: Record<string, { status: string; count: number; error?: string }> = {};
+  const results: Record<string, { status: string; count: number; error?: string }> = {};
 
   const chain: { name: string; scrape: (q: string) => Promise<ScrapedTorrent[]> }[] = [
     { name: "YTS", scrape: searchYTS },
@@ -471,15 +497,25 @@ export async function searchAllV2Debug(query: string): Promise<{
     { name: "TSA", scrape: searchTSA },
   ];
 
+  const timeout = (ms: number) => new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms));
+
+  const settled = await Promise.allSettled(
+    chain.map((s) =>
+      Promise.race([s.scrape(query), timeout(10000)])
+        .then((r) => {
+          results[s.name] = { status: "fulfilled", count: r.length };
+          return r;
+        })
+        .catch((err: any) => {
+          results[s.name] = { status: "rejected", count: 0, error: err.message };
+          return [] as ScrapedTorrent[];
+        })
+    )
+  );
+
   let all: ScrapedTorrent[] = [];
-  for (const scraper of chain) {
-    try {
-      const results = await scraper.scrape(query);
-      scrapers[scraper.name] = { status: "fulfilled", count: results.length };
-      all.push(...results);
-    } catch (err: any) {
-      scrapers[scraper.name] = { status: "rejected", count: 0, error: err.message };
-    }
+  for (const r of settled) {
+    if (r.status === "fulfilled") all.push(...r.value);
   }
 
   const seen = new Set<string>();
@@ -490,7 +526,7 @@ export async function searchAllV2Debug(query: string): Promise<{
     return true;
   });
 
-  return { query, scrapers, total: all.length };
+  return { query, scrapers: results, total: all.length };
 }
 
 // ── Original aggregation (backward compat) ─────────────────────────

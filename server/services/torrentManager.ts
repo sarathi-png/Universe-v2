@@ -1,12 +1,9 @@
 import type { Request, Response } from "express";
 import axios from "axios";
 import { searchAllTorrents, searchAllV2, type ScrapedTorrent } from "./scrapers.js";
+import { fetchMovieTitle, fetchTVTitle, fetchImdbId } from "../utils/tmdb.js";
 
 const http = axios.create({ timeout: 8000, validateStatus: () => true });
-
-function getTmdbKey(): string {
-  return process.env.TMDB_API_KEY || "";
-}
 const TPB_API = "https://apibay.org";
 const EZTV_API = "https://eztvx.to/api";
 
@@ -180,27 +177,8 @@ export const engine = new TorrentEngine();
 
 // ── Search functions ─────────────────────────────────────────────
 
-async function getMovieTitle(tmdbId: number): Promise<{ title: string; year?: string } | null> {
-  try {
-    const res = await http.get(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${getTmdbKey()}`);
-    const data = res.data as { title?: string; release_date?: string };
-    if (!data.title) return null;
-    const year = data.release_date ? data.release_date.split("-")[0] : undefined;
-    return { title: data.title, year };
-  } catch { return null; }
-}
-
-async function getTVTitle(tmdbId: number): Promise<{ title: string; year?: string } | null> {
-  try {
-    const res = await http.get(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${getTmdbKey()}`);
-    const data = res.data as { name?: string; first_air_date?: string };
-    if (!data.name) return null;
-    const year = data.first_air_date ? data.first_air_date.split("-")[0] : undefined;
-    return { title: data.name, year };
-  } catch { return null; }
-}
-
 export function extractInfoHash(magnet: string): string | null {
+  if (!magnet) return null;
   const decoded = decodeURIComponent(magnet);
   const m = decoded.match(/xt=urn:btih:([a-fA-F0-9]+)/i);
   return m ? m[1].toLowerCase() : null;
@@ -211,14 +189,13 @@ async function getImdbId(tmdbId: number, type: "movie" | "tv"): Promise<string |
   const cached = imdbCache.get(key);
   if (cached) return cached;
   try {
-    const endpoint = type === "movie"
-      ? `https://api.themoviedb.org/3/movie/${tmdbId}/external_ids`
-      : `https://api.themoviedb.org/3/tv/${tmdbId}/external_ids`;
-    const res = await http.get(`${endpoint}?api_key=${getTmdbKey()}`);
-    const data = res.data as { imdb_id?: string };
-    if (data.imdb_id) { imdbCache.set(key, data.imdb_id); return data.imdb_id; }
+    const imdb_id = await fetchImdbId(tmdbId, type);
+    if (imdb_id) { imdbCache.set(key, imdb_id); return imdb_id; }
     return null;
-  } catch { return null; }
+  } catch (err) {
+    console.error(`[torrentManager] IMDB ID fetch failed for ${type}/${tmdbId}:`, err);
+    return null;
+  }
 }
 
 function buildMagnet(infoHash: string, name: string): string {
@@ -243,7 +220,7 @@ function formatSize(bytes: number): string {
 }
 
 export async function searchMovieTorrents(tmdbId: number): Promise<TorrentSource[]> {
-  const [imdbId, meta] = await Promise.all([getImdbId(tmdbId, "movie"), getMovieTitle(tmdbId)]);
+  const [imdbId, meta] = await Promise.all([getImdbId(tmdbId, "movie"), fetchMovieTitle(tmdbId)]);
   const results: TorrentSource[] = [];
 
   if (imdbId) {
@@ -284,7 +261,7 @@ export async function searchMovieTorrents(tmdbId: number): Promise<TorrentSource
 }
 
 export async function searchTVTorrents(tmdbId: number, season: number, episode: number): Promise<TorrentSource[]> {
-  const [imdbId, meta] = await Promise.all([getImdbId(tmdbId, "tv"), getTVTitle(tmdbId)]);
+  const [imdbId, meta] = await Promise.all([getImdbId(tmdbId, "tv"), fetchTVTitle(tmdbId)]);
   const results: TorrentSource[] = [];
 
   if (imdbId) {

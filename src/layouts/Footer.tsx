@@ -8,7 +8,7 @@ export default function Footer() {
           <span className="text-lg font-bold tracking-tight text-white" style={{ fontFamily: "var(--font-display)" }}>
             NOVA<span className="text-violet-400">STREAM</span>
           </span>
-          <span className="text-[11px] text-zinc-600">&copy; {new Date().getFullYear()}</span>
+          <span className="text-[11px] text-zinc-500">&copy; {new Date().getFullYear()}</span>
         </div>
         <nav className="flex items-center gap-4 text-xs text-zinc-500">
           <Link to="/dmca" className="transition hover:text-zinc-300 hover:text-violet-400">

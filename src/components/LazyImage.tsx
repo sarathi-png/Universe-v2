@@ -22,7 +22,7 @@ export default function LazyImage({
     return (
       <div
         className={cn(
-          "flex items-center justify-center bg-gradient-to-br from-zinc-900 to-zinc-800 text-zinc-600",
+          "flex items-center justify-center bg-gradient-to-br from-zinc-900 to-zinc-800 text-zinc-500",
           className
         )}
       >

@@ -103,8 +103,14 @@ export default function App() {
           <Disclaimer />
           <Onboarding />
           <CardModalProvider>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[var(--z-overlay)] focus:rounded-xl focus:bg-violet-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:outline-none"
+            >
+              Skip to content
+            </a>
             <Navbar />
-            <main className="min-h-screen pt-10">
+            <main id="main-content" className="min-h-screen pt-10">
               <AnimatedRoutes />
             </main>
             <Footer />

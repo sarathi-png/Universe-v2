@@ -37,7 +37,7 @@ async function main() {
       console.log(`FAIL`);
     } else {
       cached++;
-      console.log(`OK — ${result.torrents.length} torrents`);
+      console.log(`OK — ${result.streams.length} streams`);
     }
 
     await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1000));

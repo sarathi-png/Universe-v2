@@ -74,7 +74,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 sm:p-6"
           onClick={onClose}
         >
           <div className="absolute inset-0 bg-black/85" />
@@ -172,7 +172,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
                   {saved ? (
                     <Check width={20} height={20} className="text-emerald-400" />
                   ) : (
-                    <PlusIcon width={20} height={20} className="text-white/60" />
+                    <PlusIcon width={20} height={20} className="text-white/70" />
                   )}
                 </button>
               </div>
@@ -181,7 +181,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
                 <div className="space-y-2">
                   <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Synopsis</h3>
                   <div className="relative">
-                    <p className={`text-sm text-white/60 leading-relaxed ${!expandedDesc ? "line-clamp-3" : ""}`}>
+                    <p className={`text-sm text-white/70 leading-relaxed ${!expandedDesc ? "line-clamp-3" : ""}`}>
                       {overview}
                     </p>
                     {overview.length > 200 && (

@@ -1,0 +1,14 @@
+{
+  "yts": {
+    "host": "yts.gg",
+    "baseUrl": "https://yts.gg",
+    "lastChecked": null,
+    "lastVerified": null
+  },
+  "tamilmv": {
+    "host": "www.1tamilmv.promo",
+    "baseUrl": "https://www.1tamilmv.promo",
+    "lastChecked": null,
+    "lastVerified": null
+  }
+}

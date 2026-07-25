@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePlayer, type SubtitleTrack, type AudioTrack } from "../hooks/usePlayer";
 import { spring, smooth } from "../styles/animationPresets";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 let embedNavBlocker: ((e: Event) => void) | null = null;
 function enableEmbedBlocker() {
@@ -58,6 +59,7 @@ export default function Player({
     skipIntro, toggleFullscreen,
   } = usePlayer();
 
+  const reduced = useReducedMotion();
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const seekDragging = useRef(false);
@@ -190,7 +192,7 @@ export default function Player({
       {isEmbed ? (
         <iframe
           src={src}
-          className="relative z-[1] h-full w-full"
+          className="relative z-10 h-full w-full"
           sandbox="allow-scripts allow-same-origin allow-forms"
           allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
@@ -198,7 +200,7 @@ export default function Player({
       ) : (
       <video
         ref={videoRef}
-        className="relative z-[1] h-full w-full cursor-pointer"
+        className="relative z-10 h-full w-full cursor-pointer"
         poster={poster}
         playsInline
         onClick={togglePlay}
@@ -219,13 +221,13 @@ export default function Player({
             <div className="relative flex h-16 w-16 items-center justify-center">
               <motion.div
                 className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                animate={reduced ? {} : { rotate: 360 }}
+                transition={reduced ? { duration: 0 } : { duration: 1, repeat: Infinity, ease: "linear" }}
               />
               <motion.div
                 className="absolute inset-0 rounded-full border-4 border-violet-500/30"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                animate={reduced ? {} : { scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                transition={reduced ? { duration: 0 } : { duration: 1.5, repeat: Infinity }}
               />
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-violet-400 ml-1 relative z-10">
                 <path d="M8 5v14l11-7z" />
@@ -284,6 +286,12 @@ export default function Player({
               <div
                 ref={seekBarRef}
                 className="group/seek mb-2 cursor-pointer"
+                role="slider"
+                aria-label="Seek"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(playerState.progress)}
+                tabIndex={0}
                 onMouseDown={() => { seekDragging.current = true; }}
                 onMouseUp={() => { seekDragging.current = false; }}
                 onMouseLeave={() => { seekDragging.current = false; }}
@@ -313,6 +321,7 @@ export default function Player({
                       disabled={!hasPrev}
                       className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Previous episode"
+                      aria-label="Previous episode"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
@@ -325,6 +334,7 @@ export default function Player({
                     whileTap={{ scale: 0.9 }}
                     className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                     title={playerState.playing ? "Pause (Space)" : "Play (Space)"}
+                    aria-label={playerState.playing ? "Pause" : "Play"}
                   >
                     {playerState.playing ? (
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -343,6 +353,7 @@ export default function Player({
                       disabled={!hasNext}
                       className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Next episode"
+                      aria-label="Next episode"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 18 14.5 12 6 6zM16 6v12h2V6z" />
@@ -355,6 +366,7 @@ export default function Player({
                       onClick={toggleMute}
                       className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                       title={playerState.muted ? "Unmute (M)" : "Mute (M)"}
+                      aria-label={playerState.muted ? "Unmute" : "Mute"}
                     >
                       {playerState.muted || playerState.volume === 0 ? (
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -454,6 +466,7 @@ export default function Player({
                     whileTap={{ scale: 0.9 }}
                     className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors hidden sm:block"
                     title="Skip intro"
+                    aria-label="Skip intro"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M6 18 14.5 12 6 6zM16 6v12h2V6z" />
@@ -465,6 +478,7 @@ export default function Player({
                     whileTap={{ scale: 0.9 }}
                     className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                     title={playerState.isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
+                    aria-label={playerState.isFullscreen ? "Exit fullscreen" : "Fullscreen"}
                   >
                     {playerState.isFullscreen ? (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -495,6 +509,8 @@ function DropdownMenu({
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -507,24 +523,70 @@ function DropdownMenu({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  useEffect(() => {
+    if (open && itemRefs.current.length > 0) {
+      const idx = items.findIndex((i) => i.active);
+      const focusIdx = idx >= 0 ? idx : 0;
+      itemRefs.current[focusIdx]?.focus();
+    }
+  }, [open, items]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) return;
+    const currentIdx = itemRefs.current.findIndex((ref) => ref === document.activeElement);
+
+    switch (e.key) {
+      case "Escape":
+        e.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        if (currentIdx < items.length - 1) {
+          itemRefs.current[currentIdx + 1]?.focus();
+        }
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        if (currentIdx > 0) {
+          itemRefs.current[currentIdx - 1]?.focus();
+        }
+        break;
+      case "Tab":
+        e.preventDefault();
+        setOpen(false);
+        break;
+    }
+  };
+
   return (
-    <div ref={menuRef} className="relative">
+    <div ref={menuRef} className="relative" onKeyDown={handleKeyDown}>
       <button
+        ref={triggerRef}
         onClick={() => setOpen(!open)}
         className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors text-[10px] font-semibold tracking-wider"
         title={label}
+        aria-haspopup="true"
+        aria-expanded={open}
       >
         {icon}
       </button>
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 min-w-[120px] overflow-hidden rounded-lg bg-zinc-900/95 backdrop-blur-lg border border-white/10 shadow-xl">
+        <div
+          className="absolute bottom-full right-0 mb-2 min-w-[120px] overflow-hidden rounded-lg bg-zinc-900/95 backdrop-blur-lg border border-white/10 shadow-xl"
+          role="menu"
+          aria-label={label}
+        >
           <div className="px-3 py-1.5 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase border-b border-white/5">
             {label}
           </div>
           {items.map((item, i) => (
             <button
               key={i}
-              onClick={() => { item.onClick(); setOpen(false); }}
+              ref={(el) => { itemRefs.current[i] = el; }}
+              role="menuitem"
+              onClick={() => { item.onClick(); setOpen(false); triggerRef.current?.focus(); }}
               className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
                 item.active
                   ? "bg-violet-500/20 text-violet-300"

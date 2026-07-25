@@ -282,7 +282,7 @@ export default function Watch() {
               ) : (
                 <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-[#020202] ring-1 ring-white/10">
                   <div className="text-center">
-                    <Info width={32} height={32} className="mx-auto mb-2 text-zinc-600" />
+                    <Info width={32} height={32} className="mx-auto mb-2 text-zinc-500" />
                     <p className="text-zinc-500">No sources available</p>
                   </div>
                 </div>

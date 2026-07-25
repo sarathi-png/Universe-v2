@@ -2,8 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Search, Bookmark, Sparkle } from "../components/icons";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 export default function Navbar() {
+  const reduced = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastScroll = useRef(0);
@@ -38,10 +40,10 @@ export default function Navbar() {
 
   return (
     <motion.header
-      initial={{ y: -80 }}
-      animate={{ y: hidden ? -80 : 0 }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed inset-x-0 top-0 z-[60] transition-[background,backdrop-filter] duration-500 ${
+      initial={{ y: reduced ? 0 : -80 }}
+      animate={{ y: reduced ? 0 : (hidden ? -80 : 0) }}
+      transition={reduced ? { duration: 0 } : { duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      className={`fixed inset-x-0 top-0 z-[var(--z-nav)] transition-[background,backdrop-filter] duration-500 ${
         scrolled ? "glass-strong" : "bg-gradient-to-b from-black/80 to-transparent"
       }`}
     >
@@ -49,8 +51,8 @@ export default function Navbar() {
         <Link to="/" className="group flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 neon-border transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
             <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
+              animate={reduced ? {} : { rotate: [0, 10, -10, 0] }}
+              transition={reduced ? { duration: 0 } : { duration: 2, repeat: Infinity, repeatDelay: 5 }}
             >
               <Sparkle width={20} height={20} className="text-white" />
             </motion.div>

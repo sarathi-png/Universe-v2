@@ -1,9 +1,25 @@
 import { Router } from "express";
-import axios from "axios";
-import { scrapeTopicById, searchQuery, searchTamilmv } from "../services/tamilmvScraper.js";
+import { scrapeTopicById, searchQuery, search1TamilMV, pickBestCandidate, scrapeTopicPage } from "../services/tamilmvScraper.js";
 import { searchAllV2 } from "../services/scrapers.js";
+import { fetchTMDB } from "../utils/tmdb.js";
 
 export const tamilmvRouter = Router();
+
+const ALLOWED_STREAM_DOMAINS = [
+  "luluvdo.com",
+  "luluvid.com",
+  "drakkar.st",
+  "dub.onestream.today",
+];
+
+function isAllowedStreamUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return ALLOWED_STREAM_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+  } catch {
+    return false;
+  }
+}
 
 tamilmvRouter.get("/search", async (req, res) => {
   try {
@@ -19,6 +35,7 @@ tamilmvRouter.get("/search", async (req, res) => {
     }
     res.json(result);
   } catch (err) {
+    console.error("[tamilmv:search]", err);
     res.status(500).json({ error: "Search failed", message: String(err) });
   }
 });
@@ -32,60 +49,82 @@ tamilmvRouter.get("/sources/:tmdbId", async (req, res) => {
       return;
     }
 
-    const sources: { magnet: string; quality: string; size: string; label: string; languages: string[] }[] = [];
+    const sources: { url: string; type: string; quality: string; label: string; languages: string[] }[] = [];
 
-    // 1. Try 1TamilMV first (Tamil dubbed content)
+    // Single TMDB call shared by both source paths
+    let tmdbTitle: string | null = null;
+    let tmdbYear: string | null = null;
     try {
-      const tamilResult = await searchTamilmv(tmdbId, type as "movie" | "tv");
-      if (tamilResult?.torrents?.length) {
-        for (const t of tamilResult.torrents) {
-          sources.push({
-            magnet: t.magnet,
-            quality: t.quality,
-            size: t.size,
-            label: "Tamil Torrent",
-            languages: t.languages,
-          });
+      const data = await fetchTMDB<any>(`/${type}/${tmdbId}`);
+      tmdbTitle = type === "movie" ? data.title : data.name;
+      tmdbYear = (type === "movie" ? data.release_date : data.first_air_date)?.split("-")[0] || null;
+    } catch (err) {
+      console.error(`[tamilmv:sources] TMDB fetch failed for ${type}/${tmdbId}:`, err);
+    }
+
+    // 1. Try 1TamilMV first (Tamil dubbed streaming embeds)
+    if (tmdbTitle) {
+      try {
+        const searchQuery = tmdbYear ? `${tmdbTitle} ${tmdbYear}` : tmdbTitle;
+        const candidates = await search1TamilMV(searchQuery);
+        if (candidates.length > 0) {
+          const found = pickBestCandidate(candidates, searchQuery, tmdbId);
+          if (found) {
+            const tamilResult = await scrapeTopicPage(found.topicId);
+            if (tamilResult?.streams?.length) {
+              for (const s of tamilResult.streams) {
+                if (!isAllowedStreamUrl(s.url)) {
+                  console.warn(`[tamilmv:sources] Blocked stream URL (not in allowlist): ${s.url}`);
+                  continue;
+                }
+                sources.push({
+                  url: s.url,
+                  type: s.type,
+                  quality: s.quality,
+                  label: "Tamil Stream",
+                  languages: s.languages,
+                });
+              }
+            }
+          }
         }
+      } catch (err) {
+        console.error(`[tamilmv:sources] 1TamilMV scrape failed for "${tmdbTitle}":`, err);
       }
-    } catch {}
+    }
 
-    // 2. Also search general scrapers (YTS etc.) for more options
-    try {
-      const tmdbRes = await axios.get(
-        `https://api.themoviedb.org/3/${type}/${tmdbId}`,
-        { params: { api_key: process.env.TMDB_API_KEY }, timeout: 5000 }
-      );
-      const title = type === "movie" ? tmdbRes.data.title : tmdbRes.data.name;
-      const year = (type === "movie" ? tmdbRes.data.release_date : tmdbRes.data.first_air_date)?.split("-")[0];
-      if (title) {
-        const searchQuery = year ? `${title} ${year}` : title;
+    // 2. Also search general scrapers (YTS etc.) for magnet fallback
+    if (tmdbTitle) {
+      try {
+        const searchQuery = tmdbYear ? `${tmdbTitle} ${tmdbYear}` : tmdbTitle;
         const scraped = await searchAllV2(searchQuery, { limit: 20 });
         for (const t of scraped) {
-          const already = sources.some((s) => s.magnet === t.magnet);
+          const already = sources.some((s) => s.url === t.magnet);
           if (!already && t.seeds > 0) {
             const hasTamil = t.languages.includes("ta") || t.languages.includes("hi") || /tamil|hindi/i.test(t.name);
             sources.push({
-              magnet: t.magnet,
+              url: t.magnet,
+              type: "torrent",
               quality: t.quality,
-              size: t.size,
               label: hasTamil ? "Tamil Torrent" : "Torrent",
               languages: t.languages,
             });
           }
         }
+      } catch (err) {
+        console.error(`[tamilmv:sources] Scraper fallback failed for "${tmdbTitle}":`, err);
       }
-    } catch {}
+    }
 
-    // Sort: Tamil sources first, then general
     sources.sort((a, b) => {
-      if (a.label === "Tamil Torrent" && b.label !== "Tamil Torrent") return -1;
-      if (a.label !== "Tamil Torrent" && b.label === "Tamil Torrent") return 1;
+      if (a.label.startsWith("Tamil") && !b.label.startsWith("Tamil")) return -1;
+      if (!a.label.startsWith("Tamil") && b.label.startsWith("Tamil")) return 1;
       return 0;
     });
 
     res.json({ tmdbId, sources });
   } catch (err) {
+    console.error("[tamilmv:sources]", err);
     res.status(500).json({ error: "Failed to fetch sources", message: String(err) });
   }
 });
@@ -100,11 +139,12 @@ tamilmvRouter.get("/topic/:id", async (req, res) => {
     const slug = req.query.slug as string | undefined;
     const result = await scrapeTopicById(topicId, slug);
     if (!result) {
-      res.status(404).json({ error: "Topic not found or no magnet links" });
+      res.status(404).json({ error: "Topic not found or no stream links" });
       return;
     }
     res.json(result);
   } catch (err) {
+    console.error("[tamilmv:topic]", err);
     res.status(500).json({ error: "Failed to scrape topic", message: String(err) });
   }
 });

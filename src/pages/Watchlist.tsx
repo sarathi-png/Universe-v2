@@ -88,7 +88,7 @@ export default function Watchlist() {
       {displayItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-32 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl glass">
-            <Bookmark width={36} height={36} className="text-zinc-600" />
+            <Bookmark width={36} height={36} className="text-zinc-500" />
           </div>
           <h2 className="text-xl font-bold">Your list is empty</h2>
           <p className="max-w-sm text-zinc-500">

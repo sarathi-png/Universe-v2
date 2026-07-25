@@ -121,6 +121,10 @@ if (warmUrl) {
   keepWarm.start();
 }
 
+// Start daily domain checker (YTS, 1TamilMV)
+import { scheduleDailyCheck } from "./services/domainChecker.js";
+scheduleDailyCheck();
+
 // Pre-scan popular movies so language cache is warm on first visit
 async function preScanPopular() {
   try {

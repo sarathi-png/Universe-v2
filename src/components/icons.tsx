@@ -139,6 +139,12 @@ export const Compass = (p: P) => (
     <path d="m16 8-2 6-6 2 2-6 6-2z" />
   </svg>
 );
+export const MagnetIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M7 3v10a5 5 0 0 0 10 0V3" />
+    <path d="M7 8h3v5a2 2 0 0 0 4 0V8h3" />
+  </svg>
+);
 export const ExternalLink = (p: P) => (
   <svg {...base(p)}>
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />

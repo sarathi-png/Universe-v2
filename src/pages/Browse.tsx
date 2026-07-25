@@ -179,7 +179,7 @@ export default function Browse() {
       {filteredItems.length === 0 && !loading && !error && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-lg font-semibold text-zinc-400">No movies found</p>
-          <p className="mt-1 text-sm text-zinc-600">Try a different filter combination.</p>
+          <p className="mt-1 text-sm text-zinc-500">Try a different filter combination.</p>
         </div>
       )}
       {(filteredItems.length > 0 || loading) && (

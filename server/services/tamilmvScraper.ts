@@ -8,20 +8,23 @@ const DATA_DIR = resolve(__dirname, "../data");
 
 const TMDB_KEY = () => process.env.TMDB_API_KEY || "";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-const BASE = "https://www.1tamilmv.reisen";
+
+const CONFIG_PATH = resolve(__dirname, "../config/domains.json");
+function tamilmvBaseUrl(): string {
+  try {
+    const cfg = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as any;
+    return cfg.tamilmv?.baseUrl || "https://www.1tamilmv.promo";
+  } catch {
+    return "https://www.1tamilmv.promo";
+  }
+}
 
 const PAREN_YEAR = /\s*\(\d{4}\)\s*/g;
 
-function cleanTitle(raw: string): string {
-  return aggressivelyClean(raw);
-}
-
-export interface TamilmvTorrent {
-  magnet: string;
+export interface TamilmvStream {
+  url: string;
+  type: "luluvdo" | "luluvid" | "drakkar";
   quality: string;
-  size: string;
-  format: string;
-  audio: string;
   languages: string[];
 }
 
@@ -30,10 +33,8 @@ export interface TamilmvResult {
   title: string;
   year: number | null;
   posterUrl: string | null;
-  torrents: TamilmvTorrent[];
+  streams: TamilmvStream[];
 }
-
-// ── TetraX TMDB database (same as dubmvScraper) ─────────────────
 
 interface TetraxDb { [key: string]: [string, "movie" | "tv", string | null] }
 
@@ -66,8 +67,7 @@ function aggressivelyClean(raw: string): string {
 
 function matchToTmdb(title: string, year: number | null): [number | null, "movie" | "tv", number] {
   const db = loadTetraxDb();
-  const clean = aggressivelyClean(title)
-    .toLowerCase();
+  const clean = aggressivelyClean(title).toLowerCase();
 
   let bestScore = 0;
   let bestMatch: [number | null, "movie" | "tv"] = [null, "movie"];
@@ -92,8 +92,6 @@ function matchToTmdb(title: string, year: number | null): [number | null, "movie
   }
   return [...bestMatch, bestScore] as [number | null, "movie" | "tv", number];
 }
-
-// ── Local cache (like dubmvScraper's tamil-dubbed.json) ─────────
 
 const CACHE_PATH = resolve(DATA_DIR, "tamilmv-cache.json");
 
@@ -140,8 +138,6 @@ function setInCache(entry: CacheEntry): void {
   saveCache();
 }
 
-// ── Helper functions ─────────────────────────────────────────────
-
 function jaccardSimilarity(a: string, b: string): number {
   const setA = new Set(a.toLowerCase().split(/\s+/).filter(Boolean));
   const setB = new Set(b.toLowerCase().split(/\s+/).filter(Boolean));
@@ -173,18 +169,6 @@ function parseQuality(text: string): string {
   return m[1].toLowerCase() === "4k" ? "4K" : m[1];
 }
 
-function parseFormat(text: string): string {
-  const m = text.match(/\b(x264|x265|HEVC|AVC|H\.264|H\.265)\b/i);
-  return m ? m[1].toUpperCase() : "Unknown";
-}
-
-function parseAudio(text: string): string {
-  const m = text.match(/\b(AAC|DD[++]?\s*(?:\d+\.\d)?|DTS|AC3|MP3|FLAC)\b/i);
-  if (m) return m[1];
-  const m2 = text.match(/(\w+\+?\s*\d+\.?\d*\s*Kbps)/i);
-  return m2 ? m2[1].trim() : "Unknown";
-}
-
 function extractYear(text: string): number | null {
   const m = text.match(/\(?(19\d{2}|20\d{2})\)?/);
   return m ? parseInt(m[1]) : null;
@@ -206,8 +190,6 @@ async function getTmdbTitle(tmdbId: number, type: "movie" | "tv"): Promise<{ tit
   }
 }
 
-// ── Search API types ─────────────────────────────────────────────
-
 interface SearchApiResult {
   tid: number;
   title: string;
@@ -222,17 +204,15 @@ interface Candidate {
   priority: boolean;
 }
 
-// ── Search 1TamilMV (JSON API) ────────────────────────────────────
-
 const PENALTY_PATTERNS = /\b(story|trailer|review|explanation|making|behind|scenes|teaser|soundtrack|ost|official\s*trailer)\b/i;
 
 async function search1TamilMV(query: string): Promise<Candidate[]> {
   try {
     const { data } = await axios.get<{ results?: SearchApiResult[] }>(
-      `${BASE}/search/api/search.php`,
+      `${tamilmvBaseUrl()}/search/api/search.php`,
       {
         params: { q: query, page: 1, sort: "title_asc", direct: 0, priority: 0 },
-        headers: { "User-Agent": UA, Referer: `${BASE}/search/` },
+        headers: { "User-Agent": UA, Referer: `${tamilmvBaseUrl()}/search/` },
         timeout: 15000,
       }
     );
@@ -245,7 +225,6 @@ async function search1TamilMV(query: string): Promise<Candidate[]> {
       if (seen.has(r.tid) || r.tid === 183) continue;
       seen.add(r.tid);
 
-      // Skip junk topics (soundtracks, teasers, etc.)
       if (PENALTY_PATTERNS.test(r.title)) continue;
 
       const year = extractYear(r.title);
@@ -260,8 +239,6 @@ async function search1TamilMV(query: string): Promise<Candidate[]> {
   }
 }
 
-// ── Candidate selection ───────────────────────────────────────────
-
 function pickBestCandidate(
   candidates: Candidate[],
   query: string,
@@ -272,7 +249,6 @@ function pickBestCandidate(
   const queryYear = extractYear(query);
   const cleanQuery = query.replace(/[^a-z0-9\s]/gi, "").toLowerCase();
 
-  // When we have a TMDB ID, try TetraX first (exact DB match)
   if (targetTmdbId) {
     for (const c of candidates) {
       const [matchedTmdbId, , score] = matchToTmdb(c.title, c.year);
@@ -282,20 +258,14 @@ function pickBestCandidate(
     }
   }
 
-  // Score every candidate by Jaccard similarity + bonuses
   let best = candidates[0];
   let bestScore = -99;
 
   for (const c of candidates) {
     let score = jaccardSimilarity(c.clean, cleanQuery);
 
-    // Priority (trusted releaser) — modest boost
     if (c.priority) score += 0.15;
-
-    // Exact year match — strong signal
     if (queryYear && c.year === queryYear) score += 0.3;
-
-    // Penalty for non-content topics that slipped through
     if (PENALTY_PATTERNS.test(c.title)) score -= 0.5;
 
     if (score > bestScore) {
@@ -307,12 +277,10 @@ function pickBestCandidate(
   return { topicId: best.topicId, title: best.title };
 }
 
-// ── Scrape topic page for magnets ────────────────────────────────
-
 async function fetchTopicHtml(topicId: number, slug?: string): Promise<string | null> {
   const cleanSlug = slug ? slug.replace(/\/+$/, "") : "";
   const slugSuffix = cleanSlug ? `-${cleanSlug}` : "";
-  const url = `${BASE}/index.php?/forums/topic/${topicId}${slugSuffix}/`;
+  const url = `${tamilmvBaseUrl()}/index.php?/forums/topic/${topicId}${slugSuffix}/`;
   try {
     const { data } = await axios.get(url, {
       headers: { "User-Agent": UA },
@@ -328,8 +296,6 @@ async function scrapeTopicPage(topicId: number, slug?: string): Promise<TamilmvR
   let html = await fetchTopicHtml(topicId, slug);
   if (!html) return null;
 
-  // If no slug was provided, the page may be a forum listing (not the topic).
-  // Try to find the topic link in the HTML, extract its slug, and re-fetch.
   if (!slug) {
     const linkRegex = new RegExp(`/forums/topic/${topicId}-([^"'<&]+)`, "i");
     const linkMatch = html.match(linkRegex);
@@ -340,52 +306,57 @@ async function scrapeTopicPage(topicId: number, slug?: string): Promise<TamilmvR
     }
   }
 
-  const magnetRegex = /<a[^>]*class="skyblue-button"[^>]*href="(magnet:[^"]+)"[^>]*>/gi;
-  const magnets: string[] = [];
-  let m;
-  while ((m = magnetRegex.exec(html)) !== null) {
-    magnets.push(m[1]);
+  const streamUrls: string[] = [];
+
+  const luluvdo = [...html.matchAll(/href="(https:\/\/luluvdo\.com\/e\/[^"]+)"/gi)];
+  for (const m of luluvdo) {
+    const u = m[1].replace(/&amp;/g, "&");
+    if (!streamUrls.includes(u)) streamUrls.push(u);
   }
-  if (magnets.length === 0) return null;
 
-  const result: TamilmvResult = { topicId, title: "", year: null, posterUrl: null, torrents: [] };
+  const luluvid = [...html.matchAll(/href="(https:\/\/luluvid\.com\/e\/[^"]+)"/gi)];
+  for (const m of luluvid) {
+    const u = m[1].replace(/&amp;/g, "&");
+    if (!streamUrls.includes(u)) streamUrls.push(u);
+  }
 
-  for (const rawMagnet of magnets) {
-    const magnet = rawMagnet.replace(/&amp;/g, "&");
-    const decoded = decodeURIComponent(magnet);
-    const dnMatch = decoded.match(/[?&]dn=([^&]+)/);
-    const displayName = dnMatch ? decodeURIComponent(dnMatch[1]) : "";
+  const drakkar = [...html.matchAll(/href="(https:\/\/drakkar\.st\/v\/[^"]+)"/gi)];
+  for (const m of drakkar) {
+    const u = m[1].replace(/&amp;/g, "&");
+    if (!streamUrls.includes(u)) streamUrls.push(u);
+  }
 
-    const xlMatch = decoded.match(/[?&]xl=(\d+)/);
-    const bytes = xlMatch ? parseInt(xlMatch[1]) : 0;
-    const size = bytes
-      ? bytes >= 1073741824 ? `${(bytes / 1073741824).toFixed(1)}GB`
-        : bytes >= 1048576 ? `${(bytes / 1048576).toFixed(0)}MB`
-          : `${(bytes / 1024).toFixed(0)}KB`
-      : "Unknown";
+  if (streamUrls.length === 0) return null;
 
-    const year = extractYear(displayName);
-    if (year) result.year = year;
+  const topicTitleMatch = html.match(/<title>([^<]*)<\/title>/i);
+  const topicTitle = topicTitleMatch ? topicTitleMatch[1].trim() : "";
 
-    const title = cleanTitle(displayName);
-    if (!result.title) result.title = title;
+  const result: TamilmvResult = {
+    topicId,
+    title: topicTitle,
+    year: extractYear(topicTitle),
+    posterUrl: null,
+    streams: [],
+  };
 
-    result.torrents.push({
-      magnet, quality: parseQuality(displayName), size,
-      format: parseFormat(displayName), audio: parseAudio(displayName),
-      languages: parseLanguages(displayName),
+  for (const url of streamUrls) {
+    let type: "luluvdo" | "luluvid" | "drakkar";
+    if (url.includes("luluvdo.com")) type = "luluvdo";
+    else if (url.includes("luluvid.com")) type = "luluvid";
+    else type = "drakkar";
+
+    result.streams.push({
+      url,
+      type,
+      quality: parseQuality(topicTitle),
+      languages: parseLanguages(topicTitle),
     });
   }
-
-  result.torrents.sort((a, b) => {
-    const rank: Record<string, number> = { "4K": 5, "2160p": 5, "1080p": 4, "720p": 3, "480p": 2, "360p": 1 };
-    return (rank[b.quality] || 0) - (rank[a.quality] || 0);
-  });
 
   return result;
 }
 
-// ── Exported functions ───────────────────────────────────────────
+export { search1TamilMV, pickBestCandidate, scrapeTopicPage };
 
 export async function searchTamilmv(
   tmdbId: number,
@@ -410,12 +381,7 @@ export async function searchTamilmv(
   if (!result.title) result.title = meta.title;
   if (!result.year) result.year = meta.year ? parseInt(meta.year) : null;
 
-  setInCache({
-    ...result,
-    tmdbId,
-    type,
-    cachedAt: new Date().toISOString(),
-  });
+  setInCache({ ...result, tmdbId, type, cachedAt: new Date().toISOString() });
 
   return result;
 }

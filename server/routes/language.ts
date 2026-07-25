@@ -10,7 +10,6 @@ import {
 import { streamRemuxedFile } from "../services/streamRemux.js";
 import { scrapeAll } from "../services/openScraperEngine.js";
 import { searchMovieTorrents, searchTVTorrents } from "../services/torrentManager.js";
-import { searchTamilmv } from "../services/tamilmvScraper.js";
 
 export const languageRouter = Router();
 
@@ -67,29 +66,8 @@ languageRouter.get("/media/:id", async (req, res) => {
       });
     }
 
-    // Tier 2.5: 1TamilMV magnet sources (live search + scrape)
-    try {
-      const tamilmvResult = await searchTamilmv(numId, type);
-      if (tamilmvResult && tamilmvResult.torrents.length > 0) {
-        for (const t of tamilmvResult.torrents) {
-          const name = tamilmvResult.title.length > 55
-            ? tamilmvResult.title.substring(0, 52) + "..." : tamilmvResult.title;
-          sources.push({
-            url: `/api/torrent/play?magnet=${encodeURIComponent(t.magnet)}`,
-            directUrl: null,
-            name: `${name} [${t.quality}]`,
-            provider: `1TamilMV (${t.quality})`,
-            quality: t.quality,
-            languages: t.languages.length > 0 ? t.languages : ["en"],
-            isEmbed: false,
-            playUrl: null,
-            providerId: `1tamilmv_${t.quality.toLowerCase()}`,
-          });
-        }
-      }
-    } catch {
-      // 1TamilMV search is non-critical; silently skip on failure
-    }
+    // Tier 2.5 was 1TamilMV — no longer provides magnets, only streaming embeds.
+    // Streaming embeds are handled in the Tamil Dubbed section (DubmvWatch.tsx).
 
     // Tier 3: Web scraper / embed fallback sources
     const scraperResult = await scrapeAll(numId, type, season, episode);
