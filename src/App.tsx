@@ -104,10 +104,12 @@ export default function App() {
           <Onboarding />
           <CardModalProvider>
             <Navbar />
-            <main className="min-h-screen pt-10">
-              <AnimatedRoutes />
-            </main>
-            <Footer />
+            <div className="min-h-screen flex flex-col bg-nova-950">
+              <main className="flex-1 pt-10">
+                <AnimatedRoutes />
+              </main>
+              <Footer />
+            </div>
             <MobileNav />
           </CardModalProvider>
         </BrowserRouter>
