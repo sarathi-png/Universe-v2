@@ -42,7 +42,7 @@ export default function Explore() {
       <p className="mb-8 text-zinc-500">Dive into worlds curated by genre.</p>
 
       {!selected ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {extendedGenres.map((g, i) => (
             <GenreTile
               key={g.id}
@@ -87,7 +87,7 @@ export default function Explore() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
               {byGenre.isLoading
                 ? Array.from({ length: 16 }).map((_, i) => (
                     <div

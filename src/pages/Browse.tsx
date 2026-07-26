@@ -115,13 +115,13 @@ export default function Browse() {
       </h1>
       <p className="mb-6 text-zinc-500">Browse thousands of titles in stunning quality.</p>
 
-      <div className="mb-8 flex flex-wrap gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Genre</label>
+      <div className="mb-6 sm:mb-8 flex flex-wrap gap-3 sm:gap-4">
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+          <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Genre</label>
           <select
             value={genre || ""}
             onChange={(e) => setGenre(e.target.value ? Number(e.target.value) : null)}
-            className="w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="w-full sm:w-36 lg:w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs sm:text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           >
             <option value="">All Genres</option>
             {genres?.map((g) => (
@@ -132,14 +132,14 @@ export default function Browse() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Original Language</label>
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+          <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Language</label>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="w-full sm:w-36 lg:w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs sm:text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           >
-            <option value="">Any Original</option>
+            <option value="">Any</option>
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
                 {l.name}
@@ -148,14 +148,12 @@ export default function Browse() {
           </select>
         </div>
 
-
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Target Age</label>
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+          <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Age</label>
           <select
             value={age}
             onChange={(e) => setAge(e.target.value)}
-            className="w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="w-full sm:w-36 lg:w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs sm:text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           >
             <option value="">Any Age</option>
             {AGE_GROUPS.map((a) => (
@@ -183,7 +181,7 @@ export default function Browse() {
         </div>
       )}
       {(filteredItems.length > 0 || loading) && (
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
         {filteredItems.map((item, i) => (
           <motion.div
             key={`${item.id}-${i}`}

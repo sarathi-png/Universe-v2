@@ -180,7 +180,7 @@ export default function TamilDubbed() {
         </div>
 
         {popularLoading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="aspect-[2/3] animate-pulse rounded-xl bg-zinc-800" />
             ))}
@@ -210,7 +210,7 @@ export default function TamilDubbed() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                     {displayCached.map((item) => (
                       <PopularCard key={`cached-${item.tmdbId}`} item={item} />
                     ))}
@@ -240,7 +240,7 @@ export default function TamilDubbed() {
               <h2 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>Recently Added</h2>
               <span className="text-sm text-zinc-500">({filteredExtraCached.length})</span>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filteredExtraCached.slice(0, 24).map((entry) => (
                 <ExtraCachedCard key={entry.fileId} entry={entry} />
               ))}

@@ -167,7 +167,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, ...smooth }}
-                className="mb-4 text-4xl font-black leading-none tracking-tighter text-glow md:text-7xl"
+                className="mb-3 md:mb-4 text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-black leading-none tracking-tighter text-glow"
                 style={{ fontFamily: "var(--font-display)" }}
               >
                 {title(m)}
@@ -177,17 +177,17 @@ export default function Hero({ items }: { items: MediaItem[] }) {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45, ...smooth }}
-                className="mb-4 flex flex-wrap items-center gap-3 text-sm font-medium"
+                className="mb-3 md:mb-4 flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm font-medium"
               >
                 <span className="flex items-center gap-1 text-amber-400">
-                  <Star width={14} height={14} />
+                  <Star width={12} height={12} className="md:w-[14px] md:h-[14px]" />
                   {m.vote_average?.toFixed(1)}
                 </span>
                 <span className="text-zinc-400">{year(m)}</span>
-                <span className="rounded border border-white/20 px-2 py-0.5 text-xs uppercase">
+                <span className="rounded border border-white/20 px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs uppercase">
                   {type === "tv" ? "Series" : "Movie"}
                 </span>
-                <span className="rounded bg-violet-600/30 px-2 py-0.5 text-xs font-bold text-violet-200">
+                <span className="rounded bg-violet-600/30 px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs font-bold text-violet-200">
                   4K HDR
                 </span>
               </motion.div>
@@ -196,7 +196,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.55, ...smooth }}
-                className="mb-7 line-clamp-3 max-w-xl text-sm leading-relaxed text-zinc-300 md:text-base"
+                className="mb-4 md:mb-7 line-clamp-2 md:line-clamp-3 max-w-xl text-xs md:text-sm leading-relaxed text-zinc-300 md:text-base"
               >
                 {m.overview}
               </motion.p>
