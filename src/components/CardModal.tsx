@@ -84,18 +84,18 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 30 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0a0f1a] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)]"
+            className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-[#0a0f1a] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] mx-2 sm:mx-0"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-30 p-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 p-1.5 sm:p-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             >
-              <Close width={20} height={20} />
+              <Close width={16} height={16} className="sm:w-[20px] sm:h-[20px]" />
             </button>
 
             {/* Backdrop section */}
-            <div className="relative h-[35vh] sm:h-[45vh] overflow-hidden rounded-t-3xl">
+            <div className="relative h-[25vh] sm:h-[35vh] md:h-[45vh] overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
               {backdrop ? (
                 <img
                   src={IMG.backdrop(backdrop, "original")}
@@ -109,8 +109,8 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1a] via-[#0a0f1a]/60 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f1a]/80 to-transparent" />
 
-              <div className="absolute -bottom-16 left-6 sm:left-8 z-20 flex items-end gap-5">
-                <div className="w-24 sm:w-32 rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex-shrink-0 aspect-[2/3]">
+              <div className="absolute -bottom-12 sm:-bottom-14 md:-bottom-16 left-4 sm:left-6 md:left-8 z-20 flex items-end gap-4 sm:gap-5">
+                <div className="w-20 sm:w-24 md:w-32 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex-shrink-0 aspect-[2/3]">
                   {poster && (
                     <img src={IMG.poster(poster)} alt={name} className="w-full h-full object-cover" />
                   )}
@@ -119,10 +119,10 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
             </div>
 
             {/* Content */}
-            <div className="pt-20 px-6 sm:px-8 pb-8 space-y-6">
-              <div className="space-y-3">
-                <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>{name}</h2>
-                <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div className="pt-16 sm:pt-20 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 space-y-4 sm:space-y-6">
+              <div className="space-y-2 sm:space-y-3">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>{name}</h2>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                   {itemYear && <span className="text-white/50">{itemYear}</span>}
                   {certification && (
                     <ContentRatingBadge data={detail} mediaType={type} />

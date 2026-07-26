@@ -45,17 +45,17 @@ export default function Navbar() {
         scrolled ? "glass-strong" : "bg-gradient-to-b from-black/80 to-transparent"
       }`}
     >
-      <div className={`mx-auto flex items-center gap-6 px-4 md:px-10 transition-[height] duration-300 ${scrolled ? "h-14" : "h-16"}`}>
-        <Link to="/" className="group flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 neon-border transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
+      <div className={`mx-auto flex items-center gap-2 sm:gap-6 px-3 sm:px-4 md:px-10 transition-[height] duration-300 ${scrolled ? "h-14" : "h-16"}`}>
+        <Link to="/" className="group flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 neon-border transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
             >
-              <Sparkle width={20} height={20} className="text-white" />
+              <Sparkle width={18} height={18} className="sm:w-[20px] sm:h-[20px] text-white" />
             </motion.div>
           </div>
-          <span className="hidden text-xl font-black tracking-tight text-glow sm:block" style={{ fontFamily: "var(--font-display)" }}>
+          <span className="hidden text-lg sm:text-xl font-black tracking-tight text-glow sm:block" style={{ fontFamily: "var(--font-display)" }}>
             NOVA<span className="text-violet-400">STREAM</span>
           </span>
         </Link>
@@ -67,7 +67,7 @@ export default function Navbar() {
               <Link
                 key={l.to}
                 to={l.to}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                className={`rounded-full px-3 xl:px-4 py-1.5 text-xs xl:text-sm font-medium transition whitespace-nowrap ${
                   active
                     ? "bg-white/10 text-white"
                     : "text-zinc-400 hover:text-white"
@@ -79,22 +79,22 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <button
             onClick={() => navigate("/search")}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white"
             aria-label="Search"
           >
-            <Search width={20} height={20} />
+            <Search width={18} height={18} className="sm:w-[20px] sm:h-[20px]" />
           </button>
           <Link
             to="/watchlist"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white"
             aria-label="Watchlist"
           >
-            <Bookmark width={20} height={20} />
+            <Bookmark width={18} height={18} className="sm:w-[20px] sm:h-[20px]" />
           </Link>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-pink-500 text-sm font-bold text-black">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-pink-500 text-xs sm:text-sm font-bold text-black">
             N
           </div>
         </div>

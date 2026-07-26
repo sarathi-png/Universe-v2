@@ -134,7 +134,7 @@ export default function SearchPage() {
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-zinc-400">
               🔥 Trending Searches
             </h3>
-            <div className="grid grid-cols-3 justify-items-center gap-3 sm:grid-cols-4 md:grid-cols-6">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 md:grid-cols-6">
               {trending.data?.slice(0, 12).map((item) => (
                 <MediaCard key={item.id} item={item} />
               ))}
@@ -152,12 +152,12 @@ export default function SearchPage() {
               ? `Search failed: ${(error as any)?.message || "unknown error"}`
               : `${results.length} results for "${query}"`}
           </p>
-          <div className="grid grid-cols-3 justify-items-center gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
             {isLoading
               ? Array.from({ length: 12 }).map((_, i) => (
                   <div
                     key={i}
-                    className="aspect-[2/3] w-[168px] rounded-xl shimmer"
+                    className="aspect-[2/3] w-full rounded-xl shimmer"
                   />
                 ))
               : results.map((item, i) => (

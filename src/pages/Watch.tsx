@@ -230,8 +230,8 @@ export default function Watch() {
 
   return (
     <AgeGate data={data}>
-      <div className="min-h-screen pt-16">
-        <div className="mx-auto max-w-[1600px] px-3 py-4 md:px-6">
+      <div className="min-h-screen pt-14 sm:pt-16">
+        <div className="mx-auto max-w-[1600px] px-2 sm:px-3 py-3 sm:py-4 md:px-6">
           <button
             onClick={() => navigate(`/title/${type}/${numId}`)}
             className="mb-4 flex items-center gap-1 text-sm text-zinc-400 transition hover:text-white"
@@ -239,7 +239,7 @@ export default function Watch() {
             <ChevronLeft width={18} height={18} /> Back to details
           </button>
 
-          <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+          <div className="grid gap-4 sm:gap-5 lg:grid-cols-[1fr_340px]">
             <div>
               {loadingSources ? (
                 <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-[#020202] ring-1 ring-white/10">

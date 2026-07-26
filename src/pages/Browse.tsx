@@ -183,7 +183,7 @@ export default function Browse() {
         </div>
       )}
       {(filteredItems.length > 0 || loading) && (
-      <div className="grid grid-cols-3 justify-items-center gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
         {filteredItems.map((item, i) => (
           <motion.div
             key={`${item.id}-${i}`}
@@ -198,7 +198,7 @@ export default function Browse() {
           Array.from({ length: 12 }).map((_, i) => (
             <div
               key={`s-${i}`}
-              className="aspect-[2/3] w-[168px] rounded-xl shimmer"
+              className="aspect-[2/3] w-full rounded-xl shimmer"
             />
           ))}
       </div>

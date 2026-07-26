@@ -61,6 +61,7 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "100px" }}
                   transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.3) }}
+                  className="w-[168px] shrink-0"
                   style={{ scrollSnapAlign: "start" }}
                 >
                   <MediaCard

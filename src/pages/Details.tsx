@@ -55,7 +55,7 @@ export default function Details() {
       <ParticleCanvas className="absolute inset-0 z-0" count={45} />
       <div className="relative z-10">
         {/* Cinematic backdrop */}
-      <div className="relative h-[75vh] min-h-[520px] w-full">
+      <div className="relative h-[55vh] sm:h-[65vh] md:h-[75vh] min-h-[380px] sm:min-h-[450px] md:min-h-[520px] w-full">
         <LazyImage
           src={IMG.backdrop(data.backdrop_path)}
           alt={title(data)}
@@ -63,11 +63,11 @@ export default function Details() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-[#050507]/40 to-black/50" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#050507] via-transparent to-transparent" />
-        <div className="pointer-events-none absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-violet-700/20 blur-[140px]" />
+        <div className="pointer-events-none absolute bottom-0 left-1/4 h-48 w-48 md:h-96 md:w-96 rounded-full bg-violet-700/20 blur-[100px] md:blur-[140px]" />
 
-        <div className="absolute bottom-0 w-full px-4 md:px-10">
-          <div className="flex flex-col gap-6 pb-10 md:flex-row md:items-end">
-            <div className="hidden w-48 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/10 shadow-2xl md:block">
+        <div className="absolute bottom-0 w-full px-3 sm:px-4 md:px-10">
+          <div className="flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-10 md:flex-row md:items-end">
+            <div className="hidden w-32 sm:w-40 md:w-48 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/10 shadow-2xl sm:block">
               <LazyImage
                 src={IMG.poster(data.poster_path)}
                 alt={title(data)}
@@ -78,58 +78,57 @@ export default function Details() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
-              <h1 className="mb-3 text-3xl font-black tracking-tighter text-glow md:text-6xl" style={{ fontFamily: "var(--font-display)" }}>
+              <h1 className="mb-2 md:mb-3 text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter text-glow" style={{ fontFamily: "var(--font-display)" }}>
                 {title(data)}
               </h1>
               {data.tagline && (
-                <p className="mb-3 italic text-violet-300">{data.tagline}</p>
+                <p className="mb-2 md:mb-3 italic text-violet-300 text-sm md:text-base">{data.tagline}</p>
               )}
-              <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
+              <div className="mb-3 md:mb-4 flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm">
                 <span className="flex items-center gap-1 font-semibold text-amber-400">
-                  <Star width={15} height={15} />
+                  <Star width={13} height={13} className="md:w-[15px] md:h-[15px]" />
                   {data.vote_average?.toFixed(1)}
                 </span>
                 <span className="text-zinc-400">{year(data)}</span>
                 <ContentRatingBadge data={data} mediaType={type as MediaType} />
                 {runtime && (
                   <span className="flex items-center gap-1 text-zinc-400">
-                    <Clock width={14} height={14} /> {runtime}m
+                    <Clock width={12} height={12} className="md:w-[14px] md:h-[14px]" /> {runtime}m
                   </span>
                 )}
                 <div className="flex flex-wrap gap-1.5">
                   {data.genres?.slice(0, 3).map((g: any) => (
                     <span
                       key={g.id}
-                      className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs"
+                      className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] md:text-xs"
                     >
                       {g.name}
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 md:gap-3">
                 <button
                   onClick={() => navigate(`/sources/${type}/${numId}`)}
-                  className="flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-bold text-black transition hover:scale-105"
+                  className="flex items-center gap-2 rounded-full bg-white px-5 md:px-8 py-2.5 md:py-3 text-xs md:text-sm font-bold text-black transition hover:scale-105"
                 >
-                  <Play width={20} height={20} /> Watch Now
+                  <Play width={16} height={16} className="md:w-[20px] md:h-[20px]" /> Watch
                 </button>
                 <button
                   onClick={() =>
                     toggleWatchlist({ ...data, media_type: type as MediaType })
                   }
-                  className="flex items-center gap-2 rounded-full glass px-5 py-3 text-sm font-semibold transition hover:bg-white/15"
+                  className="flex items-center gap-2 rounded-full glass px-4 md:px-5 py-2.5 md:py-3 text-xs md:text-sm font-semibold transition hover:bg-white/15"
                 >
                   {saved ? (
                     <>
-                      <Check width={18} height={18} className="text-emerald-400" />{" "}
-                      In List
+                      <Check width={16} height={16} className="md:w-[18px] md:h-[18px] text-emerald-400" />
                     </>
                   ) : (
                     <>
-                      <PlusIcon width={18} height={18} /> Watchlist
+                      <PlusIcon width={16} height={16} className="md:w-[18px] md:h-[18px]" />
                     </>
                   )}
                 </button>

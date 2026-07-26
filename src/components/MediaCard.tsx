@@ -66,10 +66,10 @@ export default function MediaCard({ item, rank }: Props) {
     magnetic.onMouseLeave();
   };
 
+  const isRanked = !!rank;
   return (
     <div
-      className="relative shrink-0"
-      style={{ width: rank ? 230 : 168 }}
+      className={`relative ${isRanked ? "w-[230px]" : "w-full min-w-0"}`}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
     >
@@ -89,7 +89,7 @@ export default function MediaCard({ item, rank }: Props) {
           ref={magnetic.ref as React.Ref<HTMLButtonElement>}
           style={{ x: magnetic.x, y: magnetic.y }}
           onMouseMove={magnetic.onMouseMove}
-          className="group relative aspect-[2/3] w-[168px] shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 transition-shadow duration-300 hover:ring-violet-500/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]"
+          className="group relative aspect-[2/3] w-full shrink-0 overflow-hidden rounded-xl ring-1 ring-white/5 transition-shadow duration-300 hover:ring-violet-500/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)]"
         >
           <LazyImage
             src={IMG.poster(item.poster_path)}

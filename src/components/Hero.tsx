@@ -81,7 +81,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[88vh] min-h-[560px] w-full overflow-hidden"
+      className="relative min-h-[420px] md:min-h-[560px] h-[70vh] md:h-[88vh] w-full overflow-hidden"
     >
       {/* Backdrop */}
       <AnimatePresence mode="popLayout">
@@ -205,45 +205,45 @@ export default function Hero({ items }: { items: MediaItem[] }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.65, ...smooth }}
-                className="flex flex-wrap items-center gap-3"
+                className="flex flex-wrap items-center gap-2 md:gap-3"
               >
                 <button
                   onClick={() => navigate(`/sources/${type}/${m.id}`)}
-                  className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-white px-7 py-3 text-sm font-bold text-black transition-[transform,shadow] hover:scale-105 hover:shadow-[0_0_30px_rgba(139,92,246,0.4)]"
+                  className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-white px-5 py-2.5 md:px-7 md:py-3 text-sm font-bold text-black transition-[transform,shadow] hover:scale-105 hover:shadow-[0_0_30px_rgba(139,92,246,0.4)]"
                 >
-                  <span className="relative z-10 flex items-center gap-2"><Play width={20} height={20} /> Play Now</span>
+                  <span className="relative z-10 flex items-center gap-2"><Play width={18} height={18} className="md:w-[20px] md:h-[20px]" /> <span className="hidden sm:inline">Play Now</span><span className="sm:hidden">Play</span></span>
                   <div className="absolute inset-0 translate-y-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-transform duration-300 group-hover:translate-y-0" />
                 </button>
                 <button
                   onClick={() => setShowTrailer(!showVideo)}
-                  className="flex items-center gap-2 rounded-full glass px-6 py-3 text-sm font-semibold transition-all hover:bg-white/15 hover:scale-105"
+                  className="flex items-center gap-2 rounded-full glass px-4 py-2.5 md:px-6 md:py-3 text-xs md:text-sm font-semibold transition-all hover:bg-white/15 hover:scale-105"
                 >
-                  <Play width={16} height={16} /> {showVideo ? "Hide Trailer" : "Trailer"}
+                  <Play width={14} height={14} className="md:w-[16px] md:h-[16px]" /> {showVideo ? "Hide" : "Trailer"}
                 </button>
                 <button
                   onClick={() => openCardModal(m)}
-                  className="flex items-center gap-2 rounded-full glass px-6 py-3 text-sm font-semibold transition-[transform,background] hover:bg-white/15 hover:scale-105"
+                  className="flex items-center gap-2 rounded-full glass px-4 py-2.5 md:px-6 md:py-3 text-xs md:text-sm font-semibold transition-[transform,background] hover:bg-white/15 hover:scale-105"
                 >
-                  <Info width={18} height={18} /> More Info
+                  <Info width={16} height={16} className="md:w-[18px] md:h-[18px]" /> <span className="hidden sm:inline">More Info</span>
                 </button>
                 <button
                   onClick={() => toggleWatchlist({ ...m, media_type: type })}
-                  className="flex h-12 w-12 items-center justify-center rounded-full glass transition-[transform,background] hover:bg-white/15 hover:scale-110"
+                  className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full glass transition-[transform,background] hover:bg-white/15 hover:scale-110"
                   aria-label="Watchlist"
                 >
                   {saved ? (
-                    <Check width={20} height={20} className="text-emerald-400" />
+                    <Check width={18} height={18} className="md:w-[20px] md:h-[20px] text-emerald-400" />
                   ) : (
-                    <PlusIcon width={20} height={20} />
+                    <PlusIcon width={18} height={18} className="md:w-[20px] md:h-[20px]" />
                   )}
                 </button>
                 {showVideo && (
                     <button
                       onClick={() => setMuted(!muted)}
-                      className="flex h-12 w-12 items-center justify-center rounded-full glass transition-[transform,background] hover:bg-white/15 hover:scale-110"
+                      className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full glass transition-[transform,background] hover:bg-white/15 hover:scale-110"
                       aria-label={muted ? "Unmute" : "Mute"}
                   >
-                    {muted ? <Mute width={18} height={18} /> : <Volume width={18} height={18} />}
+                    {muted ? <Mute width={16} height={16} className="md:w-[18px] md:h-[18px]" /> : <Volume width={16} height={16} className="md:w-[18px] md:h-[18px]" />}
                   </button>
                 )}
               </motion.div>

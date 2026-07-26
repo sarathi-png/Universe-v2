@@ -102,7 +102,7 @@ export default function Watchlist() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-3 justify-items-center gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
           {watchlist.map((item, i) => (
             <motion.div
               key={item.id}

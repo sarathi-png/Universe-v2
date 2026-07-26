@@ -87,12 +87,12 @@ export default function Explore() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-3 justify-items-center gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
               {byGenre.isLoading
                 ? Array.from({ length: 16 }).map((_, i) => (
                     <div
                       key={i}
-                      className="aspect-[2/3] w-[168px] rounded-xl shimmer"
+                      className="aspect-[2/3] w-full rounded-xl shimmer"
                     />
                   ))
                 : byGenre.data?.map((item) => (

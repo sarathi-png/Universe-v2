@@ -305,16 +305,16 @@ export default function Player({
               </div>
 
               {/* Controls Row */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className="flex items-center gap-0.5 sm:gap-1">
                   {onPrevEpisode && (
                     <button
                       onClick={onPrevEpisode}
                       disabled={!hasPrev}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="rounded-lg p-1 sm:p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Previous episode"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
                       </svg>
                     </button>
@@ -323,15 +323,15 @@ export default function Player({
                   <motion.button
                     onClick={togglePlay}
                     whileTap={{ scale: 0.9 }}
-                    className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                    className="rounded-lg p-1 sm:p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                     title={playerState.playing ? "Pause (Space)" : "Play (Space)"}
                   >
                     {playerState.playing ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <svg width="18" height="18" className="sm:w-[20px] sm:h-[20px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
                       </svg>
                     ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <svg width="18" height="18" className="sm:w-[20px] sm:h-[20px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     )}
@@ -341,39 +341,39 @@ export default function Player({
                     <button
                       onClick={onNextEpisode}
                       disabled={!hasNext}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="rounded-lg p-1 sm:p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Next episode"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 18 14.5 12 6 6zM16 6v12h2V6z" />
                       </svg>
                     </button>
                   )}
 
-                  <div className="flex items-center gap-1 ml-1 group/vol">
+                  <div className="flex items-center gap-0.5 sm:gap-1 ml-0.5 sm:ml-1 group/vol">
                     <button
                       onClick={toggleMute}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                      className="rounded-lg p-1 sm:p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                       title={playerState.muted ? "Unmute (M)" : "Mute (M)"}
                     >
                       {playerState.muted || playerState.volume === 0 ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 5 6 9H2v6h4l5 4z" />
                           <path d="m23 9-6 6M17 9l6 6" />
                         </svg>
                       ) : playerState.volume < 0.5 ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 5 6 9H2v6h4l5 4z" />
                           <path d="M15.5 8.5a5 5 0 0 1 0 7" />
                         </svg>
                       ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 5 6 9H2v6h4l5 4z" />
                           <path d="M19 5a10 10 0 0 1 0 14M15.5 8.5a5 5 0 0 1 0 7" />
                         </svg>
                       )}
                     </button>
-                    <div className="hidden group-hover/vol:flex items-center">
+                    <div className="hidden group-hover/vol:flex items-center max-sm:hidden">
                       <input
                         type="range"
                         min={0}
@@ -381,81 +381,87 @@ export default function Player({
                         step={0.05}
                         value={playerState.muted ? 0 : playerState.volume}
                         onChange={(e) => setVolume(parseFloat(e.target.value))}
-                        className="w-20 h-1 accent-violet-500 cursor-pointer"
+                        className="w-16 sm:w-20 h-1 accent-violet-500 cursor-pointer"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-[11px] font-medium text-white/70 min-w-0 shrink-0">
+                <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-white/70 min-w-0 shrink-0">
                   <span>{formatTime(playerState.currentTime)}</span>
                   <span className="text-white/40">/</span>
                   <span>{formatTime(playerState.duration)}</span>
                 </div>
 
-                <div className="flex-1" />
+                <div className="flex-1 min-w-0" />
 
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-0 sm:gap-0.5">
                   {playerState.audioTracks.length > 1 && (
-                    <DropdownMenu
-                      label="AUDIO"
-                      icon={
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 18V5l12-2v13" />
-                          <circle cx="6" cy="18" r="3" />
-                          <circle cx="18" cy="16" r="3" />
-                        </svg>
-                      }
-                      items={playerState.audioTracks.map((t, i) => ({
-                        label: t.name,
-                        active: i === playerState.activeAudioTrack,
-                        onClick: () => setAudioTrack(i),
-                      }))}
-                    />
+                    <div className="sm:block">
+                      <DropdownMenu
+                        label="AUDIO"
+                        icon={
+                          <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 18V5l12-2v13" />
+                            <circle cx="6" cy="18" r="3" />
+                            <circle cx="18" cy="16" r="3" />
+                          </svg>
+                        }
+                        items={playerState.audioTracks.map((t, i) => ({
+                          label: t.name,
+                          active: i === playerState.activeAudioTrack,
+                          onClick: () => setAudioTrack(i),
+                        }))}
+                      />
+                    </div>
                   )}
 
                   {playerState.subtitleTracks.length > 0 && (
-                    <DropdownMenu
-                      label="CC"
-                      icon={
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="2" y="6" width="20" height="12" rx="2" />
-                          <path d="M9 10.5a2 2 0 0 1 1.5-.5 2 2 0 0 1 1.5.5M9 13.5a2 2 0 0 0 1.5.5 2 2 0 0 0 1.5-.5M14 10.5a2 2 0 0 1 1.5-.5 2 2 0 0 1 1.5.5M14 13.5a2 2 0 0 0 1.5.5 2 2 0 0 0 1.5-.5" />
-                        </svg>
-                      }
-                      items={[
-                        { label: "Off", active: playerState.activeSubtitleTrack === -1, onClick: () => setSubtitleTrack(-1) },
-                        ...playerState.subtitleTracks.map((t, i) => ({
-                          label: t.label,
-                          active: i === playerState.activeSubtitleTrack,
-                          onClick: () => setSubtitleTrack(i),
-                        })),
-                      ]}
-                    />
+                    <div className="sm:block">
+                      <DropdownMenu
+                        label="CC"
+                        icon={
+                          <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="6" width="20" height="12" rx="2" />
+                            <path d="M9 10.5a2 2 0 0 1 1.5-.5 2 2 0 0 1 1.5.5M9 13.5a2 2 0 0 0 1.5.5 2 2 0 0 0 1.5-.5M14 10.5a2 2 0 0 1 1.5-.5 2 2 0 0 1 1.5.5M14 13.5a2 2 0 0 0 1.5.5 2 2 0 0 0 1.5-.5" />
+                          </svg>
+                        }
+                        items={[
+                          { label: "Off", active: playerState.activeSubtitleTrack === -1, onClick: () => setSubtitleTrack(-1) },
+                          ...playerState.subtitleTracks.map((t, i) => ({
+                            label: t.label,
+                            active: i === playerState.activeSubtitleTrack,
+                            onClick: () => setSubtitleTrack(i),
+                          })),
+                        ]}
+                      />
+                    </div>
                   )}
 
-                  <DropdownMenu
-                    label="SPEED"
-                    icon={
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 6v6l4 2" />
-                      </svg>
-                    }
-                    items={[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => ({
-                      label: `${speed}x`,
-                      active: speed === playerState.playbackSpeed,
-                      onClick: () => setPlaybackSpeed(speed),
-                    }))}
-                  />
+                  <div>
+                    <DropdownMenu
+                      label="SPEED"
+                      icon={
+                        <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 6v6l4 2" />
+                        </svg>
+                      }
+                      items={[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => ({
+                        label: `${speed}x`,
+                        active: speed === playerState.playbackSpeed,
+                        onClick: () => setPlaybackSpeed(speed),
+                      }))}
+                    />
+                  </div>
 
                   <motion.button
                     onClick={skipIntro}
                     whileTap={{ scale: 0.9 }}
-                    className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors hidden sm:block"
+                    className="rounded-lg p-1 sm:p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors hidden sm:block"
                     title="Skip intro"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M6 18 14.5 12 6 6zM16 6v12h2V6z" />
                     </svg>
                   </motion.button>
@@ -463,15 +469,15 @@ export default function Player({
                   <motion.button
                     onClick={toggleFullscreen}
                     whileTap={{ scale: 0.9 }}
-                    className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                    className="rounded-lg p-1 sm:p-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                     title={playerState.isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
                   >
                     {playerState.isFullscreen ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
                       </svg>
                     ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                       </svg>
                     )}
