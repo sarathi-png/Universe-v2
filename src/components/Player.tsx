@@ -63,6 +63,7 @@ export default function Player({
   const seekDragging = useRef(false);
   const seekBarRef = useRef<HTMLDivElement>(null);
   const prevProgress = useRef(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const showControls = useCallback(() => {
     setControlsVisible(true);
@@ -189,11 +190,21 @@ export default function Player({
 
       {isEmbed ? (
         <iframe
+          ref={iframeRef}
           src={src}
           className="relative z-[1] h-full w-full"
-          sandbox="allow-scripts allow-same-origin allow-forms"
           allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
+          onLoad={() => {
+            try {
+              const hash = iframeRef.current?.contentWindow?.location?.hash;
+              if (hash && hash.includes("blocked")) {
+                onError?.();
+              }
+            } catch {
+              // Cross-origin — cannot access, which is expected for working embeds
+            }
+          }}
         />
       ) : (
       <video
