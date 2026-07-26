@@ -93,7 +93,7 @@ function qualityRank(q: string): number {
 
 // ── YTS API (movie-only) ───────────────────────────────────────────
 
-async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
+export async function searchYTS(query: string): Promise<ScrapedTorrent[]> {
   try {
     const url = `https://yts.gg/api/v2/list_movies.json?query_term=${encodeURIComponent(query)}&sort_by=seeders&limit=30`;
     const { data } = await http.get(url);

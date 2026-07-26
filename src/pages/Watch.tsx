@@ -201,11 +201,10 @@ export default function Watch() {
   useEffect(() => {
     if (sourcesLenRef.current <= 1) return;
     const current = sources[sourceIdxRef.current];
-    if (current?.isEmbed) return;
     if (current?.playUrl) return;
 
     lastProgressTime.current = Date.now();
-    const timeoutMs = current?.provider === "Torrent" ? 90000 : 60000;
+    const timeoutMs = current?.isEmbed ? 30000 : current?.provider === "Torrent" ? 90000 : 60000;
     autoFallbackTimer.current = setTimeout(() => {
       const elapsed = Date.now() - lastProgressTime.current;
       if (elapsed >= timeoutMs && sourceIdxRef.current < sourcesLenRef.current - 1) {
@@ -366,7 +365,7 @@ export default function Watch() {
                 <div className="flex flex-wrap gap-2 relative z-10">
                   {sources.map((s, i) => {
                     const active = i === sourceIdx;
-                    const isTorrent = s.provider === "Torrent";
+                    const isMagnet = s.url?.startsWith("/api/torrent/play") || s.providerId?.startsWith("torrent_") || s.providerId?.startsWith("1tamilmv_");
                     return (
                       <button
                         key={`${s.name}-${i}`}
@@ -377,9 +376,9 @@ export default function Watch() {
                             : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/30"
                         }`}
                       >
-                        <span className={`h-2 w-2 rounded-full shadow-[0_0_8px] ${isTorrent ? "bg-emerald-400 shadow-emerald-400" : "bg-amber-400 shadow-amber-400"}`} />
+                        <span className={`h-2 w-2 rounded-full shadow-[0_0_8px] ${isMagnet ? "bg-emerald-400 shadow-emerald-400" : "bg-amber-400 shadow-amber-400"}`} />
                         <span className="font-semibold">{s.provider}</span>
-                        {isTorrent ? (
+                        {isMagnet ? (
                           <span className="rounded bg-emerald-600/20 px-1.5 text-[10px] text-emerald-300 font-semibold">
                             Clean
                           </span>

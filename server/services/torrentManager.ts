@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import axios from "axios";
-import { searchAllTorrents, searchAllV2, type ScrapedTorrent } from "./scrapers.js";
+import { searchAllTorrents, searchAllV2, searchYTS, type ScrapedTorrent } from "./scrapers.js";
 
 const http = axios.create({ timeout: 8000, validateStatus: () => true });
 
@@ -89,7 +89,7 @@ class TorrentEngine {
           try { torrent.destroy(); } catch {}
           reject(new Error("Metadata timeout"));
         }
-      }, 30_000);
+      }, 45_000);
 
       torrent.on("metadata", () => {
         clearTimeout(timeout);
@@ -246,30 +246,42 @@ export async function searchMovieTorrents(tmdbId: number): Promise<TorrentSource
   const [imdbId, meta] = await Promise.all([getImdbId(tmdbId, "movie"), getMovieTitle(tmdbId)]);
   const results: TorrentSource[] = [];
 
+  const searches: Promise<ScrapedTorrent[]>[] = [];
+
   if (imdbId) {
-    try {
-      const res = await http.get(`${TPB_API}/q.php?q=${imdbId}&cat=201`);
-      const data = res.data as any[];
-      if (Array.isArray(data)) {
-        for (const t of data) {
-          if (t.info_hash && t.name && Number(t.seeders) > 0) {
-            results.push({
-              magnet: buildMagnet(t.info_hash, t.name),
-              name: t.name,
-              quality: parseQualityFromName(t.name),
-              size: formatSize(Number(t.size) || 0),
-              seeds: Number(t.seeders) || 0,
-              peers: Number(t.leechers) || 0,
-            });
-          }
-        }
-      }
-    } catch {}
+    searches.push(
+      http.get(`${TPB_API}/q.php?q=${imdbId}&cat=201`).then((res) => {
+        const data = res.data as any[];
+        if (!Array.isArray(data)) return [];
+        return data
+          .filter((t: any) => t.info_hash && t.name && Number(t.seeders) > 0)
+          .map((t: any) => ({
+            magnet: buildMagnet(t.info_hash, t.name),
+            name: t.name,
+            quality: parseQualityFromName(t.name),
+            size: formatSize(Number(t.size) || 0),
+            seeds: Number(t.seeders) || 0,
+            peers: Number(t.leechers) || 0,
+            source: "TPB",
+            languages: [] as string[],
+          }));
+      }).catch(() => [] as ScrapedTorrent[])
+    );
   }
 
   if (meta) {
-    const scraped = await searchAllTorrents(meta.title, meta.year);
-    for (const t of scraped) results.push(t);
+    const query = meta.year ? `${meta.title} ${meta.year}` : meta.title;
+    searches.push(
+      searchYTS(query).catch(() => [] as ScrapedTorrent[]),
+      searchAllTorrents(meta.title, meta.year).catch(() => [] as ScrapedTorrent[]),
+    );
+  }
+
+  const allResults = await Promise.allSettled(searches);
+  for (const r of allResults) {
+    if (r.status === "fulfilled") {
+      for (const t of r.value) results.push(t);
+    }
   }
 
   const seen = new Set<string>();
