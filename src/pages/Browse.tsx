@@ -107,7 +107,7 @@ export default function Browse() {
   }, [page, hasMore, loading, load]);
 
   return (
-    <div className="relative min-h-screen px-4 pb-24 pt-24 md:px-10">
+    <div className="relative min-h-screen px-3 pb-24 pt-20 sm:px-4 md:px-10 md:pt-24">
       <ParticleCanvas className="absolute inset-0 z-0" count={40} />
       <div className="relative z-10">
       <h1 className="mb-2 text-3xl font-black tracking-tight md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
@@ -115,13 +115,13 @@ export default function Browse() {
       </h1>
       <p className="mb-6 text-zinc-500">Browse thousands of titles in stunning quality.</p>
 
-      <div className="mb-6 sm:mb-8 flex flex-wrap gap-3 sm:gap-4">
-        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
-          <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Genre</label>
+      <div className="mb-4 flex flex-wrap gap-2 sm:mb-6 sm:gap-3 md:gap-4">
+        <div className="flex w-full flex-col gap-1 sm:w-auto">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 sm:text-xs">Genre</label>
           <select
             value={genre || ""}
             onChange={(e) => setGenre(e.target.value ? Number(e.target.value) : null)}
-            className="w-full sm:w-36 lg:w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs sm:text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="w-full rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
           >
             <option value="">All Genres</option>
             {genres?.map((g) => (
@@ -132,12 +132,12 @@ export default function Browse() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
-          <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Language</label>
+        <div className="flex w-full flex-col gap-1 sm:w-auto">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 sm:text-xs">Language</label>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full sm:w-36 lg:w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs sm:text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="w-full rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
           >
             <option value="">Any</option>
             {LANGUAGES.map((l) => (
@@ -148,12 +148,12 @@ export default function Browse() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
-          <label className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-500">Age</label>
+        <div className="flex w-full flex-col gap-1 sm:w-auto">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 sm:text-xs">Age</label>
           <select
             value={age}
             onChange={(e) => setAge(e.target.value)}
-            className="w-full sm:w-36 lg:w-40 rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs sm:text-sm text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            className="w-full rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
           >
             <option value="">Any Age</option>
             {AGE_GROUPS.map((a) => (
@@ -181,7 +181,7 @@ export default function Browse() {
         </div>
       )}
       {(filteredItems.length > 0 || loading) && (
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
         {filteredItems.map((item, i) => (
           <motion.div
             key={`${item.id}-${i}`}
@@ -196,7 +196,7 @@ export default function Browse() {
           Array.from({ length: 12 }).map((_, i) => (
             <div
               key={`s-${i}`}
-              className="aspect-[2/3] w-full rounded-xl shimmer"
+              className="aspect-[2/3] w-full rounded-lg shimmer sm:rounded-xl"
             />
           ))}
       </div>

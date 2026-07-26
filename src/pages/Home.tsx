@@ -37,7 +37,7 @@ export default function Home() {
   });
 
   return (
-    <div className="relative pb-20 md:pb-10">
+    <div className="relative pb-16 md:pb-10">
       <ParticleCanvas
         count={70}
         maxSpeed={0.8}

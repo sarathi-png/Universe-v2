@@ -81,7 +81,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[420px] md:min-h-[560px] h-[70vh] md:h-[88vh] w-full overflow-hidden"
+      className="relative min-h-[380px] sm:min-h-[420px] md:min-h-[560px] h-[65vh] md:h-[88vh] w-full overflow-hidden"
     >
       {/* Backdrop */}
       <AnimatePresence mode="popLayout">
@@ -144,7 +144,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
 
       {/* Content */}
       <div className="absolute inset-0 z-10 flex items-center">
-        <div className="max-w-2xl px-4 md:px-10">
+        <div className="max-w-2xl px-3 sm:px-4 md:px-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={m.id}
