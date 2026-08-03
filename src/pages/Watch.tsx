@@ -41,6 +41,7 @@ export default function Watch() {
   const autoFallbackTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const sourceIdxRef = useRef(0);
   const sourcesLenRef = useRef(0);
+  const playerLoadedRef = useRef(false);
 
   const currentSource = sources[sourceIdx];
 
@@ -167,6 +168,7 @@ export default function Watch() {
 
   const handleProgress = useCallback((progress: number, _currentTime: number, _duration: number) => {
     if (data && progress > 0) {
+      playerLoadedRef.current = true;
       lastProgressTime.current = Date.now();
       upsertProgress({
         ...data,
@@ -204,9 +206,11 @@ export default function Watch() {
     const current = sources[sourceIdxRef.current];
     if (current?.playUrl) return;
 
+    playerLoadedRef.current = false;
     lastProgressTime.current = Date.now();
     const timeoutMs = current?.isEmbed ? 30000 : current?.provider === "Torrent" ? 90000 : 60000;
     autoFallbackTimer.current = setTimeout(() => {
+      if (playerLoadedRef.current) return;
       const elapsed = Date.now() - lastProgressTime.current;
       if (elapsed >= timeoutMs && sourceIdxRef.current < sourcesLenRef.current - 1) {
         const nextIdx = sourceIdxRef.current + 1;
