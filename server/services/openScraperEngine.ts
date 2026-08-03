@@ -29,6 +29,14 @@ const PROVIDERS: Provider[] = [
       return `https://2embed.cc/embed/${tmdbId}`;
     },
   },
+  {
+    id: "vidsrcsu",
+    name: "VidSrc (.su)",
+    buildUrl: (tmdbId: number, type: "movie" | "tv", season?: number, episode?: number): string => {
+      if (type === "tv") return `https://vidsrc.su/embed/tv/${tmdbId}/${season}/${episode}`;
+      return `https://vidsrc.su/embed/movie/${tmdbId}`;
+    },
+  },
 ];
 
 export interface ScraperSource {

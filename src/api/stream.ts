@@ -15,6 +15,7 @@ export interface MediaStreamSource {
   languages: string[];
   isEmbed: boolean;
   playUrl: string | null;
+  providerId: string;
 }
 
 export interface MediaStreamResponse {

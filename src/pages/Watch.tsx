@@ -68,6 +68,7 @@ export default function Watch() {
         languages: ["en"],
         isEmbed: false,
         playUrl: null,
+        providerId: `torrent_${magnetParam ? "manual" : "auto"}`,
       };
 
       try {
@@ -229,7 +230,7 @@ export default function Watch() {
 
   return (
     <AgeGate data={data}>
-      <div className="min-h-screen pt-14 sm:pt-16">
+      <div className="min-h-dvh pt-14 sm:pt-16">
         <div className="mx-auto max-w-[1600px] px-2 sm:px-3 py-3 sm:py-4 md:px-6">
           <button
             onClick={() => navigate(`/title/${type}/${numId}`)}
