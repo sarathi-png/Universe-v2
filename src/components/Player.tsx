@@ -174,7 +174,7 @@ export default function Player({
   return (
     <div
       ref={containerRef}
-      className="group relative aspect-video w-full overflow-hidden rounded-2xl bg-[#020202] ring-1 ring-white/10 shadow-[0_0_50px_rgba(139,92,246,0.12)]"
+      className="group relative aspect-video w-full overflow-hidden rounded-2xl bg-player ring-1 ring-white/10 shadow-[0_0_50px_rgba(139,92,246,0.12)]"
       onMouseMove={showControls}
       onMouseLeave={() => {
         if (playerState.playing) {

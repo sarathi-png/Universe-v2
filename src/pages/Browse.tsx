@@ -110,7 +110,7 @@ export default function Browse() {
     <div className="relative min-h-dvh px-3 pb-24 pt-20 sm:px-4 md:px-10 md:pt-24">
       <ParticleCanvas className="absolute inset-0 z-0" count={40} />
       <div className="relative z-10">
-      <h1 className="mb-2 text-3xl font-black tracking-tight md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
+      <h1 className="mb-2 text-3xl font-black tracking-tight md:text-4xl font-display">
         {mt === "movie" ? "Movies" : "TV Shows"}
       </h1>
       <p className="mb-6 text-zinc-500">Browse thousands of titles in stunning quality.</p>
@@ -121,7 +121,7 @@ export default function Browse() {
           <select
             value={genre || ""}
             onChange={(e) => setGenre(e.target.value ? Number(e.target.value) : null)}
-            className="w-full rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
+            className="w-full rounded-xl border border-white/10 bg-surface-elevated px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
           >
             <option value="">All Genres</option>
             {genres?.map((g) => (
@@ -137,7 +137,7 @@ export default function Browse() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
+            className="w-full rounded-xl border border-white/10 bg-surface-elevated px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
           >
             <option value="">Any</option>
             {LANGUAGES.map((l) => (
@@ -153,7 +153,7 @@ export default function Browse() {
           <select
             value={age}
             onChange={(e) => setAge(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#0c0c12] px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
+            className="w-full rounded-xl border border-white/10 bg-surface-elevated px-3 py-2 text-xs text-zinc-200 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:w-36 lg:w-40 sm:text-sm"
           >
             <option value="">Any Age</option>
             {AGE_GROUPS.map((a) => (

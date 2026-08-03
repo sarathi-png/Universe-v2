@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +14,7 @@ import { useStore } from "../store/useStore";
 import { Play, PlusIcon, Check, Close } from "./icons";
 import ContentRatingBadge, { getCertification } from "./ContentRatingBadge";
 import CastRow from "./CastRow";
+import Button from "./Button";
 
 interface CardModalProps {
   isOpen: boolean;
@@ -26,28 +27,59 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
   const { toggleWatchlist, inWatchlist } = useStore();
   const [expandedDesc, setExpandedDesc] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const type = item ? mediaTypeOf(item) : "movie";
   const { data: detail } = useDetails(type as MediaType, item?.id ?? 0);
+
+  // Focus trap for accessibility (WCAG 2.4.3)
+  const getFocusableElements = useCallback(() => {
+    if (!modalRef.current) return [];
+    return Array.from(
+      modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    );
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       setExpandedDesc(false);
       setImgLoaded(false);
       document.body.style.overflow = "hidden";
+      // Focus the modal container after render
+      requestAnimationFrame(() => {
+        const focusable = getFocusableElements();
+        if (focusable.length > 0) focusable[0].focus();
+        else modalRef.current?.focus();
+      });
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+  }, [isOpen, getFocusableElements]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) onClose();
+      if (!isOpen) return;
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "Tab") {
+        const focusable = getFocusableElements();
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, getFocusableElements]);
 
   if (!item) return null;
 
@@ -80,11 +112,13 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
           <div className="absolute inset-0 bg-black/85" />
 
           <motion.div
+            ref={modalRef}
+            tabIndex={-1}
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 30 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-[#0a0f1a] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] mx-2 sm:mx-0"
+            className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-surface border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.8)] mx-2 sm:mx-0 outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -106,8 +140,8 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
               ) : (
                 <div className="absolute inset-0 bg-zinc-900" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1a] via-[#0a0f1a]/60 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f1a]/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-surface/80 to-transparent" />
 
               <div className="absolute -bottom-12 sm:-bottom-14 md:-bottom-16 left-4 sm:left-6 md:left-8 z-20 flex items-end gap-4 sm:gap-5">
                 <div className="w-20 sm:w-24 md:w-32 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex-shrink-0 aspect-[2/3]">
@@ -121,7 +155,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
             {/* Content */}
             <div className="pt-16 sm:pt-20 px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 space-y-4 sm:space-y-6">
               <div className="space-y-2 sm:space-y-3">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>{name}</h2>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight font-display">{name}</h2>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                   {itemYear && <span className="text-white/50">{itemYear}</span>}
                   {certification && (
@@ -133,7 +167,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
                       className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ background: `conic-gradient(${ratingColor} ${rating * 10}%, rgba(255,255,255,0.1) 0%)`, padding: "2px" }}
                     >
-                      <div className="w-full h-full rounded-full bg-[#0a0f1a]/90 flex items-center justify-center">
+                      <div className="w-full h-full rounded-full bg-surface/90 flex items-center justify-center">
                         <span className="text-[9px] font-bold text-white">{Math.round(rating * 10)}%</span>
                       </div>
                     </div>
@@ -152,29 +186,29 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
               </div>
 
               <div className="flex items-center gap-3">
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => { navigate(`/sources/${type}/${item.id}`); onClose(); }}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-semibold transition-[transform,background] hover:scale-105 active:scale-95 shadow-lg shadow-purple-600/30"
                 >
                   <Play width={20} height={20} className="fill-white" />
                   Watch Now
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
                   onClick={() => { navigate(`/title/${type}/${item.id}`); onClose(); }}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl glass hover:bg-white/10 text-white font-medium transition-[transform,background] hover:scale-105 active:scale-95"
                 >
                   More Info
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="icon"
                   onClick={(e) => { e.stopPropagation(); toggleWatchlist({ ...item, media_type: type }); }}
-                  className="p-2.5 rounded-xl glass hover:bg-white/10 transition-[transform,background] hover:scale-110 active:scale-90"
                 >
                   {saved ? (
                     <Check width={20} height={20} className="text-emerald-400" />
                   ) : (
                     <PlusIcon width={20} height={20} className="text-white/60" />
                   )}
-                </button>
+                </Button>
               </div>
 
               {overview && (

@@ -242,7 +242,7 @@ export default function Watch() {
           <div className="grid gap-4 sm:gap-5 lg:grid-cols-[1fr_340px]">
             <div>
               {loadingSources ? (
-                <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-[#020202] ring-1 ring-white/10">
+                <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-player ring-1 ring-white/10">
                   <div className="relative flex h-16 w-16 items-center justify-center">
                     <div className="absolute inset-0 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
                     <Play width={20} height={20} className="text-violet-400 ml-1" />
@@ -280,7 +280,7 @@ export default function Watch() {
                   )}
                 </div>
               ) : (
-                <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-[#020202] ring-1 ring-white/10">
+                <div className="flex aspect-video w-full items-center justify-center rounded-2xl bg-player ring-1 ring-white/10">
                   <div className="text-center">
                     <Info width={32} height={32} className="mx-auto mb-2 text-zinc-600" />
                     <p className="text-zinc-500">No sources available</p>
@@ -315,7 +315,7 @@ export default function Watch() {
 
               {data && (
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <h1 className="text-xl font-bold md:text-2xl" style={{ fontFamily: "var(--font-display)" }}>{title(data)}</h1>
+                  <h1 className="text-xl font-bold md:text-2xl font-display">{title(data)}</h1>
                   <span className="flex items-center gap-1 text-sm text-amber-400">
                     <Star width={14} height={14} />
                     {data.vote_average?.toFixed(1)}

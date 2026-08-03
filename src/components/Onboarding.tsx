@@ -36,7 +36,7 @@ export default function Onboarding() {
   const Icon = slide.Icon;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden bg-[#050507]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden bg-nova-950">
       <div className="pointer-events-none absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-violet-600/30 blur-[140px] animate-float-glow" />
       <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-fuchsia-600/20 blur-[140px] animate-float-glow" />
 

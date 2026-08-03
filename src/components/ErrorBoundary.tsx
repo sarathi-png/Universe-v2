@@ -25,7 +25,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-2xl font-black text-white">
             !
           </div>
-          <h1 className="text-2xl font-black tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+          <h1 className="text-2xl font-black tracking-tight font-display">
             Something went off-script
           </h1>
           <p className="max-w-md text-red-400 text-sm font-mono">

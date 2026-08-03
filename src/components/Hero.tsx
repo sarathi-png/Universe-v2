@@ -133,14 +133,14 @@ export default function Hero({ items }: { items: MediaItem[] }) {
               title="Trailer preview"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-black/40" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-nova-950 via-transparent to-black/40" />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Base gradients */}
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent pointer-events-none z-[2]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-transparent to-black/40 pointer-events-none z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-nova-950 via-transparent to-black/40 pointer-events-none z-[2]" />
 
       {/* Content */}
       <div className="absolute inset-0 z-10 flex items-center">
@@ -167,8 +167,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, ...smooth }}
-                className="mb-3 md:mb-4 text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-black leading-none tracking-tighter text-glow"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="mb-3 md:mb-4 text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-black leading-none tracking-tighter text-glow font-display"
               >
                 {title(m)}
               </motion.h1>

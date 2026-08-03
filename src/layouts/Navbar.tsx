@@ -55,7 +55,7 @@ export default function Navbar() {
               <Sparkle width={16} height={16} className="sm:w-[18px] sm:h-[18px] md:w-[20px] md:h-[20px] text-white" />
             </motion.div>
           </div>
-          <span className="hidden sm:block text-base sm:text-lg md:text-xl font-black tracking-tight text-glow" style={{ fontFamily: "var(--font-display)" }}>
+          <span className="hidden sm:block text-base sm:text-lg md:text-xl font-black tracking-tight text-glow font-display">
             NOVA<span className="text-violet-400">STREAM</span>
           </span>
         </Link>

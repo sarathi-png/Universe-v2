@@ -135,7 +135,7 @@ export default function MediaCard({ item, rank }: Props) {
                   className="h-full w-full"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-surface-elevated via-black/20 to-transparent" />
               <h4 className="absolute bottom-2 left-3 right-3 truncate text-sm font-bold drop-shadow-md text-white">
                 {title(item)}
               </h4>

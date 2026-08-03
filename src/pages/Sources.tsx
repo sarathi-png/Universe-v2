@@ -67,7 +67,7 @@ export default function Sources() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>{title(data)}</h1>
+              <h1 className="text-2xl font-bold font-display">{title(data)}</h1>
               <p className="text-sm text-zinc-400">{data.release_date?.slice(0, 4)}</p>
             </div>
           </div>

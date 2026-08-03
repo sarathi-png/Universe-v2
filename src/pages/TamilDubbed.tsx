@@ -160,7 +160,7 @@ export default function TamilDubbed() {
         <div className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-black" style={{ fontFamily: "var(--font-display)" }}>
+              <h1 className="text-3xl font-black font-display">
                 <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                   Popular Tamil Dubbed
                 </span>
@@ -196,7 +196,7 @@ export default function TamilDubbed() {
             <section className="mb-14">
               <div className="flex items-center gap-3 mb-5">
                 <div className="h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                <h2 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>
+                <h2 className="text-xl font-bold text-white font-display">
                   Ready to Play
                 </h2>
                 <span className="text-sm text-zinc-500">({filteredCached.length})</span>
@@ -237,7 +237,7 @@ export default function TamilDubbed() {
           <section className="mt-16">
             <div className="flex items-center gap-3 mb-5">
               <div className="h-3 w-3 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.4)]" />
-              <h2 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>Recently Added</h2>
+              <h2 className="text-xl font-bold text-white font-display">Recently Added</h2>
               <span className="text-sm text-zinc-500">({filteredExtraCached.length})</span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

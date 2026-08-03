@@ -103,9 +103,10 @@ export default function App() {
           <Disclaimer />
           <Onboarding />
           <CardModalProvider>
+            <a href="#main-content" className="skip-link">Skip to content</a>
             <Navbar />
             <div className="min-h-dvh flex flex-col bg-nova-950">
-              <main className="flex-1 pt-10">
+              <main id="main-content" className="flex-1 pt-10">
                 <AnimatedRoutes />
               </main>
               <Footer />

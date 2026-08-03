@@ -61,8 +61,8 @@ export default function Details() {
           alt={title(data)}
           className="h-full w-full"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050507] via-[#050507]/40 to-black/50" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050507] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-nova-950 via-nova-950/40 to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-nova-950 via-transparent to-transparent" />
         <div className="pointer-events-none absolute bottom-0 left-1/4 h-48 w-48 md:h-96 md:w-96 rounded-full bg-violet-700/20 blur-[100px] md:blur-[140px]" />
 
         <div className="absolute bottom-0 w-full px-3 sm:px-4 md:px-10">
@@ -80,7 +80,7 @@ export default function Details() {
               transition={{ duration: 0.6 }}
               className="flex-1 min-w-0"
             >
-              <h1 className="mb-2 md:mb-3 text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter text-glow" style={{ fontFamily: "var(--font-display)" }}>
+              <h1 className="mb-2 md:mb-3 text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter text-glow font-display">
                 {title(data)}
               </h1>
               {data.tagline && (

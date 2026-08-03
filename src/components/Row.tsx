@@ -27,7 +27,7 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
             style={{ background: accent }}
           />
         )}
-        <h2 className="text-base font-bold tracking-tight md:text-xl" style={{ fontFamily: "var(--font-display)" }}>{title}</h2>
+        <h2 className="text-base font-bold tracking-tight md:text-xl font-display">{title}</h2>
       </div>
 
       <div className="relative">

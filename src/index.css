@@ -18,6 +18,11 @@
   --color-hot-pink: #f43f5e;
   --color-amber-brand: #f59e0b;
 
+  /* Surface tokens (replace hardcoded hex) */
+  --color-surface: #0a0f1a;
+  --color-surface-elevated: #0c0c12;
+  --color-player: #020202;
+
   --brand-gradient-1: linear-gradient(135deg, #8b5cf6, #06b6d4);
   --brand-gradient-2: linear-gradient(135deg, #d946ef, #f43f5e);
   --brand-gradient-3: linear-gradient(135deg, #8b5cf6, #d946ef);
@@ -54,6 +59,37 @@
   select,
   textarea {
     outline: none;
+  }
+
+  /* Focus-visible: accessible keyboard focus indicators (WCAG 2.4.7) */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid rgba(139, 92, 246, 0.8);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Skip-to-content link (hidden until focused) */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1.5rem;
+    background: var(--color-violet-brand);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+    text-decoration: none;
+    transition: top 0.2s ease;
+  }
+  .skip-link:focus {
+    top: 0;
   }
 }
 

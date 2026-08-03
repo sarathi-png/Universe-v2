@@ -157,7 +157,7 @@ export default function DubmvWatch() {
             )}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <h1 className="text-xl font-bold md:text-2xl" style={{ fontFamily: "var(--font-display)" }}>{activeEntry.title}</h1>
+              <h1 className="text-xl font-bold md:text-2xl font-display">{activeEntry.title}</h1>
               <span className="text-sm text-zinc-400">({activeEntry.year})</span>
               {activeEntry.quality && (
                 <span className="rounded-full bg-emerald-500/20 px-3 py-0.5 text-xs font-semibold text-emerald-400">
