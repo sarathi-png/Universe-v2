@@ -263,6 +263,7 @@ export default function Watch() {
                     subtitles={subtitles}
                     isEmbed={currentSource.isEmbed}
                     onProgress={handleProgress}
+                    onEmbedLoad={() => { playerLoadedRef.current = true; }}
                     onError={() => {
                       if (sourceIdxRef.current < sourcesLenRef.current - 1) {
                         const nextIdx = sourceIdxRef.current + 1;

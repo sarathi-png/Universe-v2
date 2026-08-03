@@ -31,6 +31,7 @@ interface PlayerProps {
   audioTracks?: AudioTrack[];
   isEmbed?: boolean;
   onProgress?: (progress: number, currentTime: number, duration: number) => void;
+  onEmbedLoad?: () => void;
   onError?: () => void;
   onPrevEpisode?: () => void;
   onNextEpisode?: () => void;
@@ -49,7 +50,7 @@ function formatTime(s: number): string {
 
 export default function Player({
   src, poster, title, subtitles: externalSubtitles, isEmbed,
-  onProgress, onError, onPrevEpisode, onNextEpisode, hasPrev, hasNext,
+  onProgress, onEmbedLoad, onError, onPrevEpisode, onNextEpisode, hasPrev, hasNext,
 }: PlayerProps) {
   const {
     videoRef, containerRef, playerState, loadSource,
@@ -200,9 +201,12 @@ export default function Player({
               const hash = iframeRef.current?.contentWindow?.location?.hash;
               if (hash && hash.includes("blocked")) {
                 onError?.();
+              } else {
+                onEmbedLoad?.();
               }
             } catch {
-              // Cross-origin — cannot access, which is expected for working embeds
+              // Cross-origin — cannot access, which means the embed loaded successfully
+              onEmbedLoad?.();
             }
           }}
         />
