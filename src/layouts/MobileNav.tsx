@@ -8,6 +8,7 @@ export default function MobileNav() {
     { to: "/", label: "Home", Icon: Home },
     { to: "/browse/movie", label: "Movies", Icon: Film },
     { to: "/browse/tv", label: "TV", Icon: Tv },
+    { to: "/browse/tamil-dubbed", label: "Tamil", Icon: Film },
     { to: "/explore", label: "Explore", Icon: Compass },
     { to: "/watchlist", label: "List", Icon: Bookmark },
   ];
