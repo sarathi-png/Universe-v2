@@ -38,7 +38,7 @@ const queryClient = new QueryClient({
 
 function PageLoader() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-dvh items-center justify-center">
       <div className="relative flex h-16 w-16 items-center justify-center">
         <div className="absolute inset-0 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
         <div className="text-violet-400 text-xs font-bold tracking-widest">N</div>
@@ -104,7 +104,7 @@ export default function App() {
           <Onboarding />
           <CardModalProvider>
             <Navbar />
-            <div className="min-h-screen flex flex-col bg-nova-950">
+            <div className="min-h-dvh flex flex-col bg-nova-950">
               <main className="flex-1 pt-10">
                 <AnimatedRoutes />
               </main>

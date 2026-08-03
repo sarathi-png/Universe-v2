@@ -25,7 +25,7 @@ export default function Details() {
 
   if (isLoading || !data) {
     return (
-      <div className="min-h-screen pt-16">
+      <div className="min-h-dvh pt-16">
         <div className="h-[60vh] w-full shimmer" />
       </div>
     );

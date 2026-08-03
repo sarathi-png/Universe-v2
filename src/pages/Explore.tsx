@@ -35,7 +35,7 @@ export default function Explore() {
   const byGenre = useDiscover("movie", discoverParams, !!selected);
 
   return (
-    <div className="min-h-screen px-4 pb-24 pt-24 md:px-10">
+    <div className="min-h-dvh px-4 pb-24 pt-24 md:px-10">
       <h1 className="mb-2 flex items-center gap-3 text-3xl font-black tracking-tight md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
         <Compass width={30} height={30} className="text-violet-400" /> Genre Explorer
       </h1>

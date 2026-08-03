@@ -86,7 +86,7 @@ export default function DubmvWatch() {
 
   if (isLoading || !activeEntry) {
     return (
-      <div className="flex min-h-screen items-center justify-center pt-16">
+      <div className="flex min-h-dvh items-center justify-center pt-16">
         <div className="flex items-center gap-3 text-zinc-400">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
           Loading...
@@ -96,7 +96,7 @@ export default function DubmvWatch() {
   }
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-dvh pt-16">
       <div className="mx-auto max-w-[1600px] px-3 py-4 md:px-6">
         <button
           onClick={() => navigate("/browse/tamil-dubbed")}

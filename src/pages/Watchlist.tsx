@@ -32,7 +32,7 @@ export default function Watchlist() {
   }, [tab, watchlist, watchHistory, search, sortBy]);
 
   return (
-    <div className="min-h-screen px-4 pb-24 pt-24 md:px-10">
+    <div className="min-h-dvh px-4 pb-24 pt-24 md:px-10">
       <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="mb-2 flex items-center gap-3 text-3xl font-black tracking-tight md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>

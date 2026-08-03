@@ -42,7 +42,7 @@ export default function AgeGate({
 
   if (requiresAgeCheck && !ageConfirmed) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6 text-center pt-20">
+      <div className="flex min-h-dvh items-center justify-center p-6 text-center pt-20">
         <div className="glass-strong max-w-md rounded-3xl p-8 neon-border shadow-2xl">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20 text-red-500">
             <span className="text-2xl font-black">18+</span>

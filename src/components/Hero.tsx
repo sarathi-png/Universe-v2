@@ -81,7 +81,7 @@ export default function Hero({ items }: { items: MediaItem[] }) {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[380px] sm:min-h-[420px] md:min-h-[560px] h-[65vh] md:h-[88vh] w-full overflow-hidden"
+      className="relative min-h-[380px] sm:min-h-[420px] md:min-h-[560px] h-[65svh] md:h-[88svh] w-full overflow-hidden"
     >
       {/* Backdrop */}
       <AnimatePresence mode="popLayout">

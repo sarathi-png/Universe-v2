@@ -65,7 +65,7 @@ export default function SearchPage() {
   );
 
   return (
-    <div className="min-h-screen px-4 pb-24 pt-24 md:px-10">
+    <div className="min-h-dvh px-4 pb-24 pt-24 md:px-10">
       <div className="mx-auto max-w-4xl">
         <div className="relative mb-6">
           <Search

@@ -107,7 +107,7 @@ export default function Browse() {
   }, [page, hasMore, loading, load]);
 
   return (
-    <div className="relative min-h-screen px-3 pb-24 pt-20 sm:px-4 md:px-10 md:pt-24">
+    <div className="relative min-h-dvh px-3 pb-24 pt-20 sm:px-4 md:px-10 md:pt-24">
       <ParticleCanvas className="absolute inset-0 z-0" count={40} />
       <div className="relative z-10">
       <h1 className="mb-2 text-3xl font-black tracking-tight md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>

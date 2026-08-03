@@ -8,7 +8,7 @@ export default function TermsPage() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto min-h-screen max-w-3xl px-4 pb-24 pt-24 sm:px-6 lg:px-8"
+      className="mx-auto min-h-dvh max-w-3xl px-4 pb-24 pt-24 sm:px-6 lg:px-8"
     >
       <h1 className="mb-8 text-3xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>Terms of Service</h1>
 

@@ -48,7 +48,7 @@ export default function Sources() {
   }, [data]);
 
   return (
-    <div className="min-h-screen pt-20 pb-24">
+    <div className="min-h-dvh pt-20 pb-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <button
           onClick={() => navigate(`/title/${type}/${numId}`)}
