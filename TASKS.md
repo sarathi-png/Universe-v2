@@ -8,8 +8,8 @@
 
 | ID | Task | Status | Priority | Assigned | Notes |
 |----|------|--------|----------|----------|-------|
-| 3 | Mobile app scaffold (Expo, streaming MVP) | pending | medium | orchestrator | Approved plan; start after web deploy confirmed |
-| 2 | Confirm Render deploy + spot-check site | in_progress | high | orchestrator | Pushed 42451c5 |
+| 4 | Mobile app scaffold (Expo, streaming MVP) | pending | medium | orchestrator | Approved plan; start after deploy confirmed |
+| 3 | Confirm Render deploy + spot-check site | in_progress | high | orchestrator | Pushed f7b0658 |
 
 ---
 
@@ -35,5 +35,6 @@ REVIEW_REQUIRED: false
 
 | ID | Task | Completed | Notes |
 |----|------|-----------|-------|
-| 1 | Comprehensive bug-fix pass (20 files) | 2026-08-08 | Audit 139 issues; typecheck+build pass; commit 42451c5 pushed |
+| 2 | Low/Info audit pass (43 findings) | 2026-08-08 | 41 files, commit f7b0658 pushed; typecheck+build+smoke test pass |
+| 1 | Comprehensive bug-fix pass (20 files) | 2026-08-08 | Audit 139 issues; commit 42451c5 pushed |
 | 0 | Initial setup | 2026-08-07 | Project context configured |

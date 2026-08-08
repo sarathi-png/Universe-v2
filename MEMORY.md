@@ -1,19 +1,19 @@
 # Session Log — 2026-08-08
 
 ## What Was Done
-- Fixed 20 files across frontend + server as a comprehensive bug-fix pass (audit found 139 issues; 9 critical / 24 high / 63 medium / 33 low).
-- Rewrote core of `Watch.tsx`: abort-race guard, cross-season episode navigation, interval-based auto-fallback with stall detection, runtime `validType`/`validId`, hoisted `LANG_CODE_MAP` + `SeasonSummary`/`EpisodeItem` types.
-- Fixed `Player.tsx`: `onEmbedLoad` chain, ref-counted `embedBlockerCount`, scoped keydown, DropdownMenu a11y.
-- Fixed `usePlayer.ts`: event listener leak, `.m3u8?` HLS detection, `play()` rejection surfaces `state.error`.
-- Server hardening: SSRF guard (`isSafeRequestUrl` with DNS lookup + private-IP regex), XSS escape + numeric `fileId` in dubmv proxy, `addMagnet` in-flight dedupe, batch cap 50, `CORS_ORIGINS` env, TMDB Bearer auth, PORT validation.
-- Verified: `npm run typecheck` + `npm run build` both pass.
-- Committed as `42451c5` and pushed to `main` → Render auto-deploys.
+- **Low/Info audit pass** (43 findings reconstructed via 2 parallel review agents): 41 files changed, committed as `f7b0658`, pushed to main → Render deploying.
+- **Functional bug fixed**: Watchlist page rendered `watchlist` instead of `displayItems` — search filter, sort, and History tab were all broken.
+- **A11y**: dialog semantics (role/aria-modal/aria-label) in CardModal, aria-labels on close/scroll/mic buttons, seek bar is now a real slider (role, aria-valuenow, arrow-key seeking), Player wrapped in ErrorBoundary with "try next source" fallback.
+- **Dead code removed**: `src/api/language.ts`, `src/services/languageManager.ts`, `src/utils/dominantColor.ts`, `test_tsa.ts`, `scrapeBest`, `providerCount`, `rawGet`, `useByGenre`, `useParallax`, `setQuality`/`qualityLevels`, 8 unused CSS utilities, `audioTracks` prop, `Play` re-export, `index` prop on MediaCard.
+- **Server hardening**: param validation on all TMDB routes (400s), 15s timeouts on dubmv proxy fetches, ffprobe 45s timeout, `AbortSignal.timeout` on TMDB util, regex-injection fix in languageScanner, security headers middleware, dependency-free rate limiter (scan/media/scrape/tamilmv), JSON 404 for unknown /api paths, keep-warm TLS verification + timeout.
+- **index.html**: favicon.svg + og:description/og:image/twitter tags.
+- **Verified**: typecheck + build pass; live smoke test (health ok, /api 404, invalid param 400).
 
 ## Key Learnings
-- PowerShell shows git stderr as error text even on successful push (`db0502c..42451c5` line = success).
-- Only 1 of ~15 tested embed sources is live: **vidsrc.su** (appended to PROVIDERS).
-- Render deploys on every push to main; CORS now overridable via `CORS_ORIGINS` env (needed for mobile app later).
+- `req.params` values are typed `string | string[]` in this Express types version — coerce with a `paramStr` helper.
+- Express 4 async handlers need explicit try/catch or the client hangs.
+- PowerShell `Start-Process` needs `-WorkingDirectory`; git stderr shows as error text on successful pushes.
 
 ## Next Steps
-- Confirm Render deploy goes green, spot-check site.
-- Begin `novastream-mobile` scaffold (Expo SDK 55, RN 7, streaming-only MVP) per approved plan.
+- Confirm Render deploy green, spot-check site.
+- Begin `novastream-mobile` scaffold (Expo SDK 55, streaming-only MVP) per approved plan.
