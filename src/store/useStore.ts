@@ -58,14 +58,11 @@ export const useStore = create<State>()(
       ageConfirmed: false,
       setUser: (user) => set({ user }),
       toggleWatchlist: (item) =>
-        set((s) => {
-          const exists = s.watchlist.some((w) => w.id === item.id);
-          return {
-            watchlist: exists
-              ? s.watchlist.filter((w) => w.id !== item.id)
-              : [item, ...s.watchlist],
-          };
-        }),
+        set((s) => ({
+          watchlist: s.watchlist.some((i) => i.id === item.id)
+            ? s.watchlist.filter((i) => i.id !== item.id)
+            : [item, ...s.watchlist],
+        })),
       inWatchlist: (id) => get().watchlist.some((w) => w.id === id),
       upsertProgress: (item) =>
         set((s) => {

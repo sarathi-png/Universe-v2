@@ -34,10 +34,15 @@ export const useDiscover = (type: MediaType, params: Record<string, any>, enable
     ...opts,
   });
 
-export const useDetails = (type: MediaType, id: number) =>
+export const useDetails = (
+  type: MediaType,
+  id: number,
+  options?: { enabled?: boolean }
+) =>
   useQuery({
     queryKey: ["details", type, id],
     queryFn: () => tmdbApi.details(type, id),
+    enabled: options?.enabled ?? true,
     ...opts,
   });
 

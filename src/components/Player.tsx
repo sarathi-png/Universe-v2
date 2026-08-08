@@ -4,8 +4,10 @@ import { usePlayer, type SubtitleTrack, type AudioTrack } from "../hooks/usePlay
 import { spring, smooth } from "../styles/animationPresets";
 
 let embedNavBlocker: ((e: Event) => void) | null = null;
+let embedBlockerCount = 0;
 function enableEmbedBlocker() {
-  if (embedNavBlocker) return;
+  embedBlockerCount++;
+  if (embedBlockerCount > 1 || embedNavBlocker) return;
   embedNavBlocker = (e: Event) => {
     e.preventDefault();
     const msg = (e as any).target?.outerHTML || "";
@@ -17,10 +19,10 @@ function enableEmbedBlocker() {
   window.addEventListener("beforeunload", embedNavBlocker);
 }
 function disableEmbedBlocker() {
-  if (embedNavBlocker) {
-    window.removeEventListener("beforeunload", embedNavBlocker);
-    embedNavBlocker = null;
-  }
+  if (embedBlockerCount > 0) embedBlockerCount--;
+  if (embedBlockerCount > 0 || !embedNavBlocker) return;
+  window.removeEventListener("beforeunload", embedNavBlocker);
+  embedNavBlocker = null;
 }
 
 interface PlayerProps {
@@ -32,7 +34,7 @@ interface PlayerProps {
   isEmbed?: boolean;
   onProgress?: (progress: number, currentTime: number, duration: number) => void;
   onEmbedLoad?: () => void;
-  onError?: () => void;
+  onError?: (message?: string) => void;
   onPrevEpisode?: () => void;
   onNextEpisode?: () => void;
   hasPrev?: boolean;
@@ -65,6 +67,13 @@ export default function Player({
   const seekBarRef = useRef<HTMLDivElement>(null);
   const prevProgress = useRef(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const onProgressRef = useRef(onProgress);
+  const seekDragMoved = useRef(false);
+  const lastSeekX = useRef(0);
+
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
 
   const showControls = useCallback(() => {
     setControlsVisible(true);
@@ -74,25 +83,35 @@ export default function Player({
     }
   }, [playerState.playing]);
 
+  const hideControls = useCallback(() => {
+    if (playerState.playing) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => setControlsVisible(false), 3000);
+    }
+  }, [playerState.playing]);
+
   useEffect(() => {
-    loadSource(src, externalSubtitles);
+    const cleanup = loadSource(src, externalSubtitles);
     if (isEmbed) {
       enableEmbedBlocker();
     } else {
       disableEmbedBlocker();
     }
-    return () => disableEmbedBlocker();
-  }, [src, loadSource, isEmbed]);
+    return () => {
+      cleanup?.();
+      disableEmbedBlocker();
+    };
+  }, [src, loadSource, isEmbed, externalSubtitles]);
 
   useEffect(() => {
-    if (onProgress && playerState.currentTime > 0) {
+    if (onProgressRef.current && playerState.currentTime > 0) {
       const p = Math.floor(playerState.progress);
       if (p !== prevProgress.current && p % 5 < 1) {
         prevProgress.current = p;
-        onProgress(playerState.progress, playerState.currentTime, playerState.duration);
+        onProgressRef.current(playerState.progress, playerState.currentTime, playerState.duration);
       }
     }
-  }, [playerState.progress, playerState.currentTime, playerState.duration, onProgress]);
+  }, [playerState.progress, playerState.currentTime, playerState.duration]);
 
   useEffect(() => {
     if (!playerState.playing && !seekDragging.current) {
@@ -104,23 +123,40 @@ export default function Player({
   const handleSeekClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const bar = seekBarRef.current;
     if (!bar || !videoRef.current) return;
+    if (seekDragMoved.current) {
+      seekDragMoved.current = false;
+      return;
+    }
     const rect = bar.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    videoRef.current.currentTime = ratio * playerState.duration;
-  }, [playerState.duration, videoRef]);
+    seek(ratio * playerState.duration);
+  }, [playerState.duration, seek]);
 
   const handleSeekDrag = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!seekDragging.current) return;
     const bar = seekBarRef.current;
     if (!bar || !videoRef.current) return;
+    if (Math.abs(e.clientX - lastSeekX.current) > 2) {
+      seekDragMoved.current = true;
+    }
+    lastSeekX.current = e.clientX;
     const rect = bar.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    videoRef.current.currentTime = ratio * playerState.duration;
-  }, [playerState.duration, videoRef]);
+    seek(ratio * playerState.duration);
+  }, [playerState.duration, seek]);
+
+  const handleSeekTouch = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const bar = seekBarRef.current;
+    if (!bar || !videoRef.current) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+    seek(ratio * playerState.duration);
+  }, [playerState.duration, seek]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const video = videoRef.current;
     if (!video) return;
+    if (!containerRef.current?.contains(document.activeElement)) return;
     const tag = (e.target as HTMLElement)?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
@@ -169,20 +205,25 @@ export default function Player({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    const onMouseUp = () => {
+      seekDragging.current = false;
+    };
+    window.addEventListener("mouseup", onMouseUp);
+    return () => window.removeEventListener("mouseup", onMouseUp);
+  }, []);
+
   const isBuffering = !isEmbed && playerState.buffering;
   const isPaused = !isEmbed && !playerState.playing && !playerState.buffering;
 
   return (
     <div
       ref={containerRef}
+      role="application"
+      aria-label="Video player"
       className="group relative aspect-video w-full overflow-hidden rounded-2xl bg-player ring-1 ring-white/10 shadow-[0_0_50px_rgba(139,92,246,0.12)]"
       onMouseMove={showControls}
-      onMouseLeave={() => {
-        if (playerState.playing) {
-          clearTimeout(hideTimer.current);
-          hideTimer.current = setTimeout(() => setControlsVisible(false), 3000);
-        }
-      }}
+      onMouseLeave={hideControls}
     >
       {/* Ambient glow behind video */}
       <div className="pointer-events-none absolute -inset-20 z-0 opacity-30 transition-opacity duration-700">
@@ -217,7 +258,7 @@ export default function Player({
         poster={poster}
         playsInline
         onClick={togglePlay}
-        onError={() => onError?.()}
+        onError={(e) => onError?.((e.target as HTMLVideoElement)?.error?.message || "Playback error")}
       />
       )}
 
@@ -242,7 +283,7 @@ export default function Player({
                 animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-violet-400 ml-1 relative z-10">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-violet-400 ml-1 relative z-10">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>
@@ -268,7 +309,7 @@ export default function Player({
               transition={spring}
               className="flex h-20 w-20 items-center justify-center rounded-full bg-violet-600/80 backdrop-blur-sm hover:scale-110"
             >
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" className="text-white ml-1.5">
+              <svg aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="currentColor" className="text-white ml-1.5">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </motion.div>
@@ -299,11 +340,14 @@ export default function Player({
               <div
                 ref={seekBarRef}
                 className="group/seek mb-2 cursor-pointer"
-                onMouseDown={() => { seekDragging.current = true; }}
+                onMouseDown={(e) => { seekDragging.current = true; seekDragMoved.current = false; lastSeekX.current = e.clientX; }}
                 onMouseUp={() => { seekDragging.current = false; }}
                 onMouseLeave={() => { seekDragging.current = false; }}
                 onMouseMove={handleSeekDrag}
                 onClick={handleSeekClick}
+                onTouchStart={handleSeekTouch}
+                onTouchMove={handleSeekTouch}
+                onTouchEnd={() => { seekDragging.current = false; }}
               >
                 <div className="relative h-1.5 rounded-full bg-white/20 transition-all duration-200 group-hover/seek:h-2">
                   <motion.div
@@ -329,7 +373,7 @@ export default function Player({
                       className="rounded-lg p-1 sm:p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Previous episode"
                     >
-                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                      <svg aria-hidden="true" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
                       </svg>
                     </button>
@@ -342,11 +386,11 @@ export default function Player({
                     title={playerState.playing ? "Pause (Space)" : "Play (Space)"}
                   >
                     {playerState.playing ? (
-                      <svg width="18" height="18" className="sm:w-[20px] sm:h-[20px]" viewBox="0 0 24 24" fill="currentColor">
+                      <svg aria-hidden="true" width="18" height="18" className="sm:w-[20px] sm:h-[20px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
                       </svg>
                     ) : (
-                      <svg width="18" height="18" className="sm:w-[20px] sm:h-[20px]" viewBox="0 0 24 24" fill="currentColor">
+                      <svg aria-hidden="true" width="18" height="18" className="sm:w-[20px] sm:h-[20px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     )}
@@ -359,7 +403,7 @@ export default function Player({
                       className="rounded-lg p-1 sm:p-1.5 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Next episode"
                     >
-                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
+                      <svg aria-hidden="true" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 18 14.5 12 6 6zM16 6v12h2V6z" />
                       </svg>
                     </button>
@@ -372,17 +416,17 @@ export default function Player({
                       title={playerState.muted ? "Unmute (M)" : "Mute (M)"}
                     >
                       {playerState.muted || playerState.volume === 0 ? (
-                        <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg aria-hidden="true" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 5 6 9H2v6h4l5 4z" />
                           <path d="m23 9-6 6M17 9l6 6" />
                         </svg>
                       ) : playerState.volume < 0.5 ? (
-                        <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg aria-hidden="true" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 5 6 9H2v6h4l5 4z" />
                           <path d="M15.5 8.5a5 5 0 0 1 0 7" />
                         </svg>
                       ) : (
-                        <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg aria-hidden="true" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 5 6 9H2v6h4l5 4z" />
                           <path d="M19 5a10 10 0 0 1 0 14M15.5 8.5a5 5 0 0 1 0 7" />
                         </svg>
@@ -416,7 +460,7 @@ export default function Player({
                       <DropdownMenu
                         label="AUDIO"
                         icon={
-                          <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg aria-hidden="true" width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M9 18V5l12-2v13" />
                             <circle cx="6" cy="18" r="3" />
                             <circle cx="18" cy="16" r="3" />
@@ -436,7 +480,7 @@ export default function Player({
                       <DropdownMenu
                         label="CC"
                         icon={
-                          <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg aria-hidden="true" width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="2" y="6" width="20" height="12" rx="2" />
                             <path d="M9 10.5a2 2 0 0 1 1.5-.5 2 2 0 0 1 1.5.5M9 13.5a2 2 0 0 0 1.5.5 2 2 0 0 0 1.5-.5M14 10.5a2 2 0 0 1 1.5-.5 2 2 0 0 1 1.5.5M14 13.5a2 2 0 0 0 1.5.5 2 2 0 0 0 1.5-.5" />
                           </svg>
@@ -457,7 +501,7 @@ export default function Player({
                     <DropdownMenu
                       label="SPEED"
                       icon={
-                        <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg aria-hidden="true" width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="12" r="10" />
                           <path d="M12 6v6l4 2" />
                         </svg>
@@ -471,12 +515,12 @@ export default function Player({
                   </div>
 
                   <motion.button
-                    onClick={skipIntro}
+                    onClick={() => skipIntro()}
                     whileTap={{ scale: 0.9 }}
                     className="rounded-lg p-1 sm:p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors hidden sm:block"
                     title="Skip intro"
                   >
-                    <svg width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="currentColor">
+                    <svg aria-hidden="true" width="14" height="14" className="sm:w-[16px] sm:h-[16px]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M6 18 14.5 12 6 6zM16 6v12h2V6z" />
                     </svg>
                   </motion.button>
@@ -488,11 +532,11 @@ export default function Player({
                     title={playerState.isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
                   >
                     {playerState.isFullscreen ? (
-                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg aria-hidden="true" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
                       </svg>
                     ) : (
-                      <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg aria-hidden="true" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                       </svg>
                     )}
@@ -524,27 +568,40 @@ function DropdownMenu({
         setOpen(false);
       }
     };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
   return (
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-label={label}
         className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors text-[10px] font-semibold tracking-wider"
         title={label}
       >
         {icon}
       </button>
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 min-w-[120px] overflow-hidden rounded-lg bg-zinc-900/95 backdrop-blur-lg border border-white/10 shadow-xl">
+        <div
+          role="menu"
+          className="absolute bottom-full right-0 mb-2 min-w-[120px] overflow-hidden rounded-lg bg-zinc-900/95 backdrop-blur-lg border border-white/10 shadow-xl"
+        >
           <div className="px-3 py-1.5 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase border-b border-white/5">
             {label}
           </div>
           {items.map((item, i) => (
             <button
               key={i}
+              role="menuitem"
               onClick={() => { item.onClick(); setOpen(false); }}
               className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
                 item.active
@@ -553,7 +610,7 @@ function DropdownMenu({
               }`}
             >
               {item.active && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               )}

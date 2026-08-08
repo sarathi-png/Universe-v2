@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import Hero from "../components/Hero";
 import Row from "../components/Row";
 import ParticleCanvas from "../components/ParticleCanvas";
@@ -23,7 +24,10 @@ export default function Home() {
   const upcoming = useUpcoming();
   const airing = useAiringToday();
   const { continueWatching, watchHistory } = useStore();
-  const aiPicks = getPersonalizedPicks(trending.data || [], continueWatching);
+  const aiPicks = useMemo(
+    () => getPersonalizedPicks(trending.data || [], continueWatching),
+    [trending.data, continueWatching]
+  );
 
   const anime = useDiscover("tv", {
     with_genres: 16,

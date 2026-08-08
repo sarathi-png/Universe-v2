@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Search, Bookmark, Sparkle } from "../components/icons";
@@ -11,13 +11,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const loc = useLocation();
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   useMotionValueEvent(scrollY, "change", (latest) => {
+    setScrolled(latest > 40);
     const prev = lastScroll.current;
     lastScroll.current = latest;
     if (prev < latest && latest > 150) {
@@ -62,7 +57,7 @@ export default function Navbar() {
 
         <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 overflow-x-auto no-scrollbar">
           {links.map((l) => {
-            const active = loc.pathname === l.to;
+            const active = loc.pathname === l.to || loc.pathname.startsWith(l.to + "/");
             return (
               <Link
                 key={l.to}

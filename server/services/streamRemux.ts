@@ -1,6 +1,6 @@
 import { spawn, execSync } from "child_process";
 import { existsSync, readdirSync } from "fs";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 
 const WINGET_DIR = "C:\\Users\\ADMIN\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe";
 
@@ -92,7 +92,8 @@ async function findAudioTrack(
 export async function streamRemuxedFile(
   directUrl: string,
   targetLang: string,
-  res: Response
+  res: Response,
+  req?: Request
 ): Promise<void> {
   // Use the direct URL for ffmpeg/ffprobe instead of the proxy worker,
   // because the proxy rate-limits non-browser clients (429 errors).
@@ -152,7 +153,9 @@ export async function streamRemuxedFile(
       }
     });
 
-    res.on("close", () => proc.kill());
+    const stop = () => proc.kill();
+    res.on("close", stop);
+    if (req) req.on("close", stop);
   }
 
   tryStream();

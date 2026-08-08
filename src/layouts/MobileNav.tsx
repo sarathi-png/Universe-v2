@@ -16,7 +16,7 @@ export default function MobileNav() {
     <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 z-[60] glass-strong md:hidden">
       <div className="flex items-center justify-around px-2 py-2">
         {items.map(({ to, label, Icon }) => {
-          const active = loc.pathname === to;
+          const active = loc.pathname === to || loc.pathname.startsWith(to + "/");
           return (
             <Link
               key={to}

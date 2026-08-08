@@ -33,9 +33,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const rawPort = Number(process.env.PORT);
+const PORT = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 3001;
 
-app.use(cors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://v2-torrent-stream.onrender.com", "https://novastream-v2.onrender.com"] }));
+const DEFAULT_CORS_ORIGINS = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://v2-torrent-stream.onrender.com",
+  "https://novastream-v2.onrender.com",
+];
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
+  : DEFAULT_CORS_ORIGINS;
+
+app.use(cors({ origin: corsOrigins }));
 app.use(express.json());
 
 // Block popups / redirects from embed sources on the watch page
@@ -68,14 +79,29 @@ app.get("/api/status", async (_req, res) => {
       memory: { rss: Math.round(process.memoryUsage().rss / 1024 / 1024), heap: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) },
       engine: getTorrentStatus(),
     });
-  } catch {
+  } catch (err) {
+    console.error("[api/status] failed:", err);
     res.json({ uptime: process.uptime(), engine: "unavailable" });
   }
 });
 
 // Internal video player page for dubmv proxy (supports seeking)
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 app.get("/player/dubmv-proxy/:fileId", (req, res) => {
-  const fileId = req.params.fileId;
+  const fileIdRaw = req.params.fileId;
+  if (!/^\d+$/.test(fileIdRaw)) {
+    res.status(400).send("Invalid file id");
+    return;
+  }
+  const fileId = escapeHtml(fileIdRaw);
   const proxyUrl = `/api/dubmv/proxy/${fileId}`;
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -125,16 +151,16 @@ if (warmUrl) {
 async function preScanPopular() {
   try {
     const { scanMovie } = await import("./services/languageScanner.js");
-    const r = await fetch(
-      `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.TMDB_API_KEY}&page=1`
-    );
-    const data = await r.json() as { results: { id: number }[] };
-    const popularIds = data.results.slice(0, 20).map((m) => m.id);
+    const r = await fetch("https://api.themoviedb.org/3/movie/popular?page=1", {
+      headers: process.env.TMDB_API_KEY ? { Authorization: `Bearer ${process.env.TMDB_API_KEY}` } : undefined,
+    });
+    const data = await r.json() as { results?: { id: number }[] };
+    const popularIds = (data.results || []).slice(0, 20).map((m) => m.id);
     console.log(`Pre-scanning ${popularIds.length} popular movies for language data...`);
     await Promise.allSettled(popularIds.map((id) => scanMovie(id, "movie")));
     console.log("Pre-scan complete.");
-  } catch {
-    // non-critical
+  } catch (err) {
+    console.error("[preScanPopular] failed:", err);
   }
 }
 preScanPopular();

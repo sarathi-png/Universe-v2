@@ -41,6 +41,15 @@ interface PlayerState {
   error: string | null;
 }
 
+function isHlsUrl(url: string): boolean {
+  return (
+    url.includes(".m3u8") ||
+    url.includes(".m3u8?") ||
+    url.includes("ezvidapi.com/movie/") ||
+    url.includes("ezvidapi.com/tv/")
+  );
+}
+
 export function usePlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -84,6 +93,12 @@ export function usePlayer() {
     trackElements.current.forEach((t) => t.remove());
     trackElements.current = [];
 
+    const listeners: Array<{ el: HTMLVideoElement; type: string; handler: EventListenerOrEventListenerObject }> = [];
+    const onEvent = (type: string, handler: EventListenerOrEventListenerObject) => {
+      video.addEventListener(type, handler);
+      listeners.push({ el: video, type, handler });
+    };
+
     if (externalSubtitles?.length) {
       externalSubtitles.forEach((sub) => {
         if (sub.url) {
@@ -99,7 +114,7 @@ export function usePlayer() {
       });
     }
 
-    if (url.includes(".m3u8") || url.includes("ezvidapi.com/movie/") || url.includes("ezvidapi.com/tv/")) {
+    if (isHlsUrl(url)) {
       if (Hls.isSupported()) {
         const hls = new Hls({
           enableWorker: true,
@@ -168,16 +183,16 @@ export function usePlayer() {
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = url;
-        video.addEventListener("loadedmetadata", () => {
+        onEvent("loadedmetadata", () => {
           update({ buffering: false, duration: video.duration });
-          video.play().catch(() => {});
+          video.play().catch(() => update({ error: "Playback blocked. Tap to play." }));
         });
       }
     } else {
       video.src = url;
-      video.addEventListener("loadedmetadata", () => {
+      onEvent("loadedmetadata", () => {
         update({ buffering: false, duration: video.duration });
-        video.play().catch(() => {});
+        video.play().catch(() => update({ error: "Playback blocked. Tap to play." }));
       });
     }
 
@@ -196,22 +211,18 @@ export function usePlayer() {
     const onEnded = () => update({ playing: false, progress: 100 });
     const onVolumeChange = () => update({ volume: video.volume, muted: video.muted });
 
-    video.addEventListener("timeupdate", onTime);
-    video.addEventListener("play", onPlay);
-    video.addEventListener("pause", onPause);
-    video.addEventListener("waiting", onWaiting);
-    video.addEventListener("canplay", onCanPlay);
-    video.addEventListener("ended", onEnded);
-    video.addEventListener("volumechange", onVolumeChange);
+    onEvent("timeupdate", onTime);
+    onEvent("play", onPlay);
+    onEvent("pause", onPause);
+    onEvent("waiting", onWaiting);
+    onEvent("canplay", onCanPlay);
+    onEvent("ended", onEnded);
+    onEvent("volumechange", onVolumeChange);
 
     return () => {
-      video.removeEventListener("timeupdate", onTime);
-      video.removeEventListener("play", onPlay);
-      video.removeEventListener("pause", onPause);
-      video.removeEventListener("waiting", onWaiting);
-      video.removeEventListener("canplay", onCanPlay);
-      video.removeEventListener("ended", onEnded);
-      video.removeEventListener("volumechange", onVolumeChange);
+      listeners.forEach((l) => l.el.removeEventListener(l.type, l.handler));
+      trackElements.current.forEach((t) => t.remove());
+      trackElements.current = [];
     };
   }, [update]);
 
@@ -293,8 +304,8 @@ export function usePlayer() {
     }
   }, [update]);
 
-  const skipIntro = useCallback(() => {
-    seek(90);
+  const skipIntro = useCallback((seconds = 90) => {
+    seek(seconds);
   }, [seek]);
 
   const toggleFullscreen = useCallback(() => {
@@ -302,12 +313,10 @@ export function usePlayer() {
     if (!container) return;
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
-      update({ isFullscreen: false });
     } else {
       container.requestFullscreen().catch(() => {});
-      update({ isFullscreen: true });
     }
-  }, [update]);
+  }, []);
 
   useEffect(() => {
     const onFSChange = () => {

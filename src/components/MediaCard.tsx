@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -41,24 +41,37 @@ export default function MediaCard({ item, rank }: Props) {
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [certification, setCertification] = useState<string | null>(null);
   const magnetic = useMagnetic(0.2);
+  const mountedRef = useRef(true);
+  const hoverToken = useRef(0);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const onEnter = () => {
+    const token = ++hoverToken.current;
     timer.current = setTimeout(async () => {
+      if (!mountedRef.current || token !== hoverToken.current) return;
       setHover(true);
       try {
         const details = await tmdbApi.details(type, item.id);
+        if (!mountedRef.current || token !== hoverToken.current) return;
         const trailer = details.videos?.results?.find(
           (v: any) => v.type === "Trailer" && v.site === "YouTube"
         );
         if (trailer) setTrailerKey(trailer.key);
         setCertification(getCertification(details, type));
       } catch (e) {
-        // fail silently
+        console.error("MediaCard details fetch failed:", e);
       }
     }, 450);
   };
   
   const onLeave = () => {
+    hoverToken.current++;
     clearTimeout(timer.current);
     setHover(false);
     setTrailerKey(null);

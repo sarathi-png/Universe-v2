@@ -41,8 +41,12 @@ export interface MediaItem {
   genre_ids?: number[];
 }
 
-const get = async <T,>(url: string, params?: Record<string, any>): Promise<T> => {
-  const { data } = await tmdb.get<T>(url, { params });
+const get = async <T,>(
+  url: string,
+  params?: Record<string, any>,
+  config?: { signal?: AbortSignal }
+): Promise<T> => {
+  const { data } = await tmdb.get<T>(url, { params, ...config });
   return data;
 };
 
@@ -67,8 +71,8 @@ export const tmdbApi = {
       page,
       sort_by: "popularity.desc",
     }),
-  discover: (type: MediaType, params: Record<string, any>) =>
-    get<{ results: MediaItem[]; total_pages: number }>(`/discover/${type}`, params),
+  discover: (type: MediaType, params: Record<string, any>, config?: { signal?: AbortSignal }) =>
+    get<{ results: MediaItem[]; total_pages: number }>(`/discover/${type}`, params, config),
   details: (type: MediaType, id: number) =>
     get<any>(`/${type}/${id}`, {
       append_to_response: "videos,credits,similar,recommendations,reviews,images,release_dates,content_ratings",

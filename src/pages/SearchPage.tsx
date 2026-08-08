@@ -25,7 +25,15 @@ export default function SearchPage() {
   const trending = useTrending("day");
   const { recentSearches, addSearch } = useStore();
   const [listening, setListening] = useState(false);
+  const [micUnsupported, setMicUnsupported] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recRef = useRef<any>(null);
+
+  useEffect(() => {
+    const q = params.get("q") || "";
+    setInput(q);
+    setQuery(q);
+  }, [params]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -43,19 +51,37 @@ export default function SearchPage() {
     inputRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (recRef.current) {
+        recRef.current.abort?.();
+        recRef.current.stop?.();
+      }
+    };
+  }, []);
+
   const voiceSearch = () => {
     const SR =
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
     if (!SR) {
-      setListening(true);
-      setTimeout(() => setListening(false), 2000);
+      setMicUnsupported(true);
+      setTimeout(() => setMicUnsupported(false), 2500);
       return;
     }
+    recRef.current?.abort?.();
     const rec = new SR();
+    recRef.current = rec;
     rec.lang = "en-US";
     rec.onstart = () => setListening(true);
-    rec.onend = () => setListening(false);
+    rec.onend = () => {
+      setListening(false);
+      recRef.current = null;
+    };
+    rec.onerror = () => {
+      setListening(false);
+      recRef.current = null;
+    };
     rec.onresult = (e: any) => setInput(e.results[0][0].transcript);
     rec.start();
   };
@@ -90,6 +116,11 @@ export default function SearchPage() {
           >
             <Mic width={20} height={20} />
           </button>
+          {micUnsupported && (
+            <p className="absolute left-14 top-full mt-1 text-xs text-amber-400">
+              Voice search not supported in this browser
+            </p>
+          )}
         </div>
 
         {!query && (
@@ -162,7 +193,7 @@ export default function SearchPage() {
                 ))
               : results.map((item, i) => (
                   <motion.div
-                    key={`${item.id}-${i}`}
+                    key={`${item.media_type || "movie"}-${item.id}`}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(i * 0.02, 0.4) }}

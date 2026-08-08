@@ -32,7 +32,7 @@ const AGE_GROUPS = [
 
 export default function Browse() {
   const { type } = useParams<{ type: MediaType }>();
-  const mt = (type as MediaType) || "movie";
+  const mt: MediaType = type === "movie" || type === "tv" ? type : "movie";
   const { data: genres } = useGenres(mt);
   const [genre, setGenre] = useState<number | null>(null);
   const [language, setLanguage] = useState<string>("");
@@ -44,13 +44,26 @@ export default function Browse() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const sentinel = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const seqRef = useRef(0);
+  const loadingRef = useRef(false);
+  const hasMoreRef = useRef(hasMore);
+  hasMoreRef.current = hasMore;
+  const pageRef = useRef(page);
+  pageRef.current = page;
 
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(
     async (p: number, reset = false) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const seq = ++seqRef.current;
+      loadingRef.current = true;
       setLoading(true);
       setError(null);
+      if (reset) setItems([]);
       try {
         const params: Record<string, any> = {
           sort_by: "popularity.desc",
@@ -73,18 +86,27 @@ export default function Browse() {
         }
 
         params.page = p;
-        const res = await tmdbApi.discover(mt, params);
+        const res = await tmdbApi.discover(mt, params, { signal: controller.signal });
+        if (seq !== seqRef.current) return;
         setItems((prev) => (reset ? res.results : [...prev, ...res.results]));
         setHasMore(p < res.total_pages);
       } catch (e: any) {
+        if (controller.signal.aborted || seq !== seqRef.current) return;
         console.error("Browse load failed:", e);
         setError(e?.response?.data?.error || e?.message || "Failed to load");
         if (reset) setItems([]);
+      } finally {
+        if (seq === seqRef.current) {
+          loadingRef.current = false;
+          setLoading(false);
+        }
       }
-      setLoading(false);
     },
     [mt, genre, language, age]
   );
+
+  const loadRef = useRef(load);
+  loadRef.current = load;
 
   useEffect(() => {
     setPage(1);
@@ -92,19 +114,28 @@ export default function Browse() {
   }, [load]);
 
   useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
     const obs = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          const next = page + 1;
+        if (
+          entries[0].isIntersecting &&
+          hasMoreRef.current &&
+          !loadingRef.current
+        ) {
+          const next = pageRef.current + 1;
+          pageRef.current = next;
           setPage(next);
-          load(next);
+          loadRef.current(next);
         }
       },
       { rootMargin: "400px" }
     );
     if (sentinel.current) obs.observe(sentinel.current);
     return () => obs.disconnect();
-  }, [page, hasMore, loading, load]);
+  }, [hasMore]);
 
   return (
     <div className="relative min-h-dvh px-3 pb-24 pt-20 sm:px-4 md:px-10 md:pt-24">
@@ -176,7 +207,9 @@ export default function Browse() {
       )}
       {filteredItems.length === 0 && !loading && !error && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-lg font-semibold text-zinc-400">No movies found</p>
+          <p className="text-lg font-semibold text-zinc-400">
+            {mt === "tv" ? "No TV shows found" : "No movies found"}
+          </p>
           <p className="mt-1 text-sm text-zinc-600">Try a different filter combination.</p>
         </div>
       )}
@@ -184,7 +217,7 @@ export default function Browse() {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
         {filteredItems.map((item, i) => (
           <motion.div
-            key={`${item.id}-${i}`}
+            key={item.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: Math.min(i * 0.03, 0.5), ease: [0.22, 1, 0.36, 1] }}

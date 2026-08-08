@@ -13,7 +13,7 @@ export const torrentRouter = Router();
 torrentRouter.get("/search/movie/:tmdbId", async (req, res) => {
   try {
     const tmdbId = Number(req.params.tmdbId);
-    if (!tmdbId) {
+    if (!Number.isInteger(tmdbId) || tmdbId <= 0) {
       res.status(400).json({ error: "Invalid TMDB ID" });
       return;
     }
@@ -30,8 +30,12 @@ torrentRouter.get("/search/tv/:tmdbId", async (req, res) => {
     const tmdbId = Number(req.params.tmdbId);
     const season = Number(req.query.season) || 1;
     const episode = Number(req.query.episode) || 1;
-    if (!tmdbId) {
+    if (!Number.isInteger(tmdbId) || tmdbId <= 0) {
       res.status(400).json({ error: "Invalid TMDB ID" });
+      return;
+    }
+    if (!Number.isInteger(season) || season <= 0 || !Number.isInteger(episode) || episode <= 0) {
+      res.status(400).json({ error: "Invalid season or episode" });
       return;
     }
     const torrents = await searchTVTorrents(tmdbId, season, episode);

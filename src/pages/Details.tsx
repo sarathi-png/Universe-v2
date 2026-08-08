@@ -18,8 +18,10 @@ import ParticleCanvas from "../components/ParticleCanvas";
 export default function Details() {
   const { type, id } = useParams<{ type: MediaType; id: string }>();
   const navigate = useNavigate();
+  const mt: MediaType = type === "movie" || type === "tv" ? type : "movie";
   const numId = Number(id);
-  const { data, isLoading } = useDetails(type as MediaType, numId);
+  const validId = Number.isInteger(numId) && numId > 0;
+  const { data, isLoading } = useDetails(mt, numId, { enabled: validId });
   const { toggleWatchlist, inWatchlist } = useStore();
   const [tab, setTab] = useState<"overview" | "cast" | "reviews">("overview");
 
@@ -92,7 +94,7 @@ export default function Details() {
                   {data.vote_average?.toFixed(1)}
                 </span>
                 <span className="text-zinc-400">{year(data)}</span>
-                <ContentRatingBadge data={data} mediaType={type as MediaType} />
+                <ContentRatingBadge data={data} mediaType={mt} />
                 {runtime && (
                   <span className="flex items-center gap-1 text-zinc-400">
                     <Clock width={12} height={12} className="md:w-[14px] md:h-[14px]" /> {runtime}m
@@ -111,15 +113,14 @@ export default function Details() {
               </div>
               <div className="flex flex-wrap items-center gap-2 md:gap-3">
                 <button
-                  onClick={() => navigate(`/sources/${type}/${numId}`)}
+                  onClick={() => navigate(`/sources/${mt}/${numId}`)}
                   className="flex items-center gap-2 rounded-full bg-white px-5 md:px-8 py-2.5 md:py-3 text-xs md:text-sm font-bold text-black transition hover:scale-105"
                 >
                   <Play width={16} height={16} className="md:w-[20px] md:h-[20px]" /> Watch
                 </button>
                 <button
-                  onClick={() =>
-                    toggleWatchlist({ ...data, media_type: type as MediaType })
-                  }
+                  onClick={() => toggleWatchlist({ ...data, media_type: mt })}
+                  aria-label={saved ? "Remove from watchlist" : "Add to watchlist"}
                   className="flex items-center gap-2 rounded-full glass px-4 md:px-5 py-2.5 md:py-3 text-xs md:text-sm font-semibold transition hover:bg-white/15"
                 >
                   {saved ? (
@@ -174,7 +175,9 @@ export default function Details() {
                   <iframe
                     src={`https://www.youtube.com/embed/${trailer.key}`}
                     title="Trailer"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
                     className="h-full w-full"
                   />
                 </div>
@@ -248,7 +251,7 @@ export default function Details() {
                 <div key={r.id} className="glass rounded-2xl p-5">
                   <div className="mb-2 flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 font-bold">
-                      {r.author[0]?.toUpperCase()}
+                      {(r.author?.[0] || "?").toUpperCase()}
                     </div>
                     <div>
                       <p className="text-sm font-semibold">{r.author}</p>

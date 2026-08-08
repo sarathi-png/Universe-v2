@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { promises as dnsPromises } from "dns";
 import {
   scanMovie,
   scanMedia,
@@ -14,6 +15,62 @@ import { searchTamilmv } from "../services/tamilmvScraper.js";
 
 export const languageRouter = Router();
 
+const scanLocks = new Map<string, Promise<unknown>>();
+
+function withScanLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const existing = scanLocks.get(key);
+  if (existing) return existing as Promise<T>;
+  const run = fn().then(
+    (value) => {
+      if (scanLocks.get(key) === run) scanLocks.delete(key);
+      return value;
+    },
+    (err) => {
+      if (scanLocks.get(key) === run) scanLocks.delete(key);
+      throw err;
+    }
+  );
+  scanLocks.set(key, run);
+  return run;
+}
+
+const PRIVATE_IP_RE = /^(0\.|10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/;
+
+function isPrivateIp(address: string): boolean {
+  const a = address.toLowerCase();
+  if (a.includes(":")) {
+    if (a.startsWith("::ffff:")) return PRIVATE_IP_RE.test(a.slice(7));
+    return a === "::" || a === "::1" || /^fc|^fd/.test(a) || /^fe[89ab]/.test(a);
+  }
+  return PRIVATE_IP_RE.test(a);
+}
+
+async function isSafeRequestUrl(rawUrl: string): Promise<boolean> {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+
+  const host = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (
+    host === "localhost" || host.endsWith(".localhost") ||
+    host.endsWith(".local") || host === "0.0.0.0"
+  ) {
+    return false;
+  }
+
+  try {
+    const addresses = await dnsPromises.lookup(host, { all: true });
+    return addresses.every(({ address }) => !isPrivateIp(address));
+  } catch (err) {
+    console.error(`[language] DNS lookup failed for ${host}:`, err);
+    return false;
+  }
+}
+
 // Tier 1: Direct file server
 // Tier 2: Torrent streams
 // Tier 3: Web scrapers / embed providers
@@ -21,14 +78,32 @@ export const languageRouter = Router();
 languageRouter.get("/media/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const type = (req.query.type as "movie" | "tv") || "movie";
-    const season = req.query.season ? Number(req.query.season) : undefined;
-    const episode = req.query.episode ? Number(req.query.episode) : undefined;
-    const lang = req.query.lang as string | undefined;
     const numId = Number(id);
+    if (!Number.isInteger(numId) || numId <= 0) {
+      res.status(400).json({ error: "Invalid TMDB ID" });
+      return;
+    }
+    const type = (req.query.type as string) || "movie";
+    if (type !== "movie" && type !== "tv") {
+      res.status(400).json({ error: "Invalid type" });
+      return;
+    }
+    const season = req.query.season !== undefined ? Number(req.query.season) : undefined;
+    const episode = req.query.episode !== undefined ? Number(req.query.episode) : undefined;
+    if (season !== undefined && (!Number.isInteger(season) || season <= 0)) {
+      res.status(400).json({ error: "Invalid season" });
+      return;
+    }
+    if (episode !== undefined && (!Number.isInteger(episode) || episode <= 0)) {
+      res.status(400).json({ error: "Invalid episode" });
+      return;
+    }
+    const lang = req.query.lang as string | undefined;
 
     // Tier 1: Direct file server sources
-    const directResult = await scanMedia(id, type, season, episode);
+    const directResult = await withScanLock(`media:${numId}:${type}:${season ?? "*"}:${episode ?? "*"}`, () =>
+      scanMedia(id, type, season, episode)
+    );
     const sources: any[] = [];
 
     if (directResult && directResult.sources.length > 0) {
@@ -134,12 +209,21 @@ languageRouter.get("/media/:id", async (req, res) => {
 languageRouter.get("/stream/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const numId = Number(id);
+    if (!Number.isInteger(numId) || numId <= 0) {
+      res.status(400).json({ error: "Invalid TMDB ID" });
+      return;
+    }
     const lang = (req.query.lang as string) || "en";
-    const type = (req.query.type as "movie" | "tv") || "movie";
+    const type = (req.query.type as string) || "movie";
+    if (type !== "movie" && type !== "tv") {
+      res.status(400).json({ error: "Invalid type" });
+      return;
+    }
 
     let cached = getCachedLanguages(id);
     if (!cached) {
-      cached = await scanMovie(id, type);
+      cached = await withScanLock(`lang:${numId}:${type}`, () => scanMovie(id, type));
     }
 
     const file = getBestFileForLanguage(id, lang);
@@ -148,13 +232,13 @@ languageRouter.get("/stream/:id", async (req, res) => {
       return;
     }
 
-    const containsTarget = cached.languages.includes(lang);
+    const containsTarget = cached?.languages?.includes(lang) ?? false;
 
     res.json({
       tmdbId: id,
       url: file.url,
       name: file.name,
-      languages: cached.languages,
+      languages: cached?.languages ?? [],
       targetLanguage: containsTarget ? lang : null,
     });
   } catch (err) {
@@ -165,12 +249,21 @@ languageRouter.get("/stream/:id", async (req, res) => {
 languageRouter.get("/play/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const numId = Number(id);
+    if (!Number.isInteger(numId) || numId <= 0) {
+      res.status(400).json({ error: "Invalid TMDB ID" });
+      return;
+    }
     const lang = (req.query.lang as string) || "en";
-    const type = (req.query.type as "movie" | "tv") || "movie";
+    const type = (req.query.type as string) || "movie";
+    if (type !== "movie" && type !== "tv") {
+      res.status(400).json({ error: "Invalid type" });
+      return;
+    }
 
     let cached = getCachedLanguages(id);
     if (!cached) {
-      cached = await scanMovie(id, type);
+      cached = await withScanLock(`lang:${numId}:${type}`, () => scanMovie(id, type));
     }
 
     const file = getBestFileForLanguage(id, lang);
@@ -180,7 +273,7 @@ languageRouter.get("/play/:id", async (req, res) => {
     }
 
     res.setHeader("Content-Type", "video/mp4");
-    await streamRemuxedFile(file.directUrl, lang, res);
+    await streamRemuxedFile(file.directUrl, lang, res, req);
   } catch (err) {
     if (!res.headersSent) {
       res.status(500).json({ error: "Playback failed", message: String(err) });
@@ -191,10 +284,21 @@ languageRouter.get("/play/:id", async (req, res) => {
 languageRouter.get("/scan/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const type = (req.query.type as "movie" | "tv") || "movie";
+    const numId = Number(id);
+    if (!Number.isInteger(numId) || numId <= 0) {
+      res.status(400).json({ error: "Invalid TMDB ID" });
+      return;
+    }
+    const type = (req.query.type as string) || "movie";
+    if (type !== "movie" && type !== "tv") {
+      res.status(400).json({ error: "Invalid type" });
+      return;
+    }
     const title = req.query.title as string | undefined;
     const year = req.query.year as string | undefined;
-    const result = await scanMovie(id, type, title, year);
+    const result = await withScanLock(`scan:${numId}:${type}:${title ?? ""}:${year ?? ""}`, () =>
+      scanMovie(id, type, title, year)
+    );
     res.json({ tmdbId: id, ...result });
   } catch (err) {
     res.status(500).json({ error: "Scan failed", message: String(err) });
@@ -209,12 +313,17 @@ languageRouter.get("/transcode", async (req, res) => {
       res.status(400).json({ error: "Missing url parameter" });
       return;
     }
+    if (!(await isSafeRequestUrl(url))) {
+      res.status(400).json({ error: "Invalid or unsafe url parameter" });
+      return;
+    }
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Accept-Ranges", "bytes");
-    await streamRemuxedFile(url, lang, res);
+    await streamRemuxedFile(url, lang, res, req);
   } catch (err) {
+    console.error("[language] transcode failed:", err);
     if (!res.headersSent) {
-      res.status(500).json({ error: "Transcode failed", message: String(err) });
+      res.status(500).json({ error: "Transcode failed" });
     }
   }
 });
@@ -230,12 +339,23 @@ languageRouter.get("/:id", (req, res) => {
 });
 
 languageRouter.post("/batch", (req, res) => {
-  const { ids } = req.body as { ids: (string | number)[] };
+  const { ids } = req.body as { ids?: unknown };
   if (!Array.isArray(ids)) {
     res.status(400).json({ error: "ids must be an array" });
     return;
   }
-  const result = getBatchLanguages(ids);
+  if (ids.length > 50) {
+    res.status(400).json({ error: "ids array too large (max 50)" });
+    return;
+  }
+  for (const raw of ids) {
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n <= 0) {
+      res.status(400).json({ error: "ids must contain only positive integers" });
+      return;
+    }
+  }
+  const result = getBatchLanguages(ids as (string | number)[]);
   res.json(result);
 });
 

@@ -33,19 +33,25 @@ const client = axios.create({
   timeout: 30000,
 });
 
+const searchClient = axios.create({
+  baseURL: "/api/search",
+  timeout: 30000,
+});
+
 export const mediaStreamApi = {
   getStream: async (
     id: number,
     type: "movie" | "tv",
     season?: number,
     episode?: number,
-    lang?: string
+    lang?: string,
+    signal?: AbortSignal
   ): Promise<MediaStreamResponse> => {
     const params: Record<string, string | number> = { type };
     if (season != null) params.season = season;
     if (episode != null) params.episode = episode;
     if (lang) params.lang = lang;
-    const { data } = await client.get<MediaStreamResponse>(`/media/${id}`, { params });
+    const { data } = await client.get<MediaStreamResponse>(`/media/${id}`, { params, signal });
     return data;
   },
 
@@ -58,7 +64,7 @@ export const mediaStreamApi = {
     if (options?.quality) params.quality = options.quality;
     if (options?.lang) params.lang = options.lang;
     if (options?.limit) params.limit = String(options.limit);
-    const { data } = await axios.get("/api/search/v2", { params, timeout: 30000 });
+    const { data } = await searchClient.get("/v2", { params });
     return data;
   },
 };

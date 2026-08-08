@@ -30,7 +30,9 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const type = item ? mediaTypeOf(item) : "movie";
-  const { data: detail } = useDetails(type as MediaType, item?.id ?? 0);
+  const { data: detail } = useDetails(type as MediaType, item?.id ?? 0, {
+    enabled: isOpen && item != null && Number.isFinite(item.id) && item.id > 0,
+  });
 
   // Focus trap for accessibility (WCAG 2.4.3)
   const getFocusableElements = useCallback(() => {
@@ -136,6 +138,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
                   alt={name}
                   className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
                   onLoad={() => setImgLoaded(true)}
+                  onError={(e) => (e.currentTarget.style.display = "none")}
                 />
               ) : (
                 <div className="absolute inset-0 bg-zinc-900" />
@@ -146,7 +149,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
               <div className="absolute -bottom-12 sm:-bottom-14 md:-bottom-16 left-4 sm:left-6 md:left-8 z-20 flex items-end gap-4 sm:gap-5">
                 <div className="w-20 sm:w-24 md:w-32 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex-shrink-0 aspect-[2/3]">
                   {poster && (
-                    <img src={IMG.poster(poster)} alt={name} className="w-full h-full object-cover" />
+                    <img src={IMG.poster(poster)} alt={name} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
                   )}
                 </div>
               </div>

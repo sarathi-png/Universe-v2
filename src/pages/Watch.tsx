@@ -19,18 +19,42 @@ import {
 } from "../components/icons";
 import { useQuery } from "@tanstack/react-query";
 
+const LANG_CODE_MAP: Record<string, string> = {
+  hi_dub: "hi", ta_dub: "ta", te_dub: "te",
+  ml_dub: "ml", es_dub: "es", en_dub: "en",
+};
+
+interface SeasonSummary {
+  id: number;
+  season_number: number;
+  episode_count: number;
+  name?: string;
+}
+
+interface EpisodeItem {
+  id: number;
+  episode_number: number;
+  name: string;
+  overview?: string | null;
+  still_path?: string | null;
+}
+
 export default function Watch() {
   const { type, id } = useParams<{ type: MediaType; id: string }>();
   const navigate = useNavigate();
   const numId = Number(id);
   const [searchParams] = useSearchParams();
   const magnetParam = searchParams.get("magnet");
+  const validType: MediaType = type === "movie" || type === "tv" ? type : "movie";
+  const validId = Number.isInteger(numId) && numId > 0;
 
-  const { data } = useDetails(type as MediaType, numId);
+  const { data } = useDetails(validType, numId, { enabled: validId });
   const { upsertProgress, addToHistory, toggleWatchlist, inWatchlist, targetAudioLang } = useStore();
 
-  const [season, setSeason] = useState(1);
-  const [episode, setEpisode] = useState(1);
+  const seasonParam = Number(searchParams.get("season"));
+  const episodeParam = Number(searchParams.get("episode"));
+  const [season, setSeason] = useState(Number.isInteger(seasonParam) && seasonParam > 0 ? seasonParam : 1);
+  const [episode, setEpisode] = useState(Number.isInteger(episodeParam) && episodeParam > 0 ? episodeParam : 1);
   const [sources, setSources] = useState<MediaStreamSource[]>([]);
   const [subtitles, setSubtitles] = useState<SubtitleTrack[]>([]);
   const [loadingSources, setLoadingSources] = useState(true);
@@ -38,24 +62,26 @@ export default function Watch() {
   const [playerKey, setPlayerKey] = useState(0);
   const [sourceIdx, setSourceIdx] = useState(0);
   const lastProgressTime = useRef(0);
-  const autoFallbackTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const autoFallbackTimer = useRef<ReturnType<typeof setInterval>>(undefined);
   const sourceIdxRef = useRef(0);
   const sourcesLenRef = useRef(0);
   const playerLoadedRef = useRef(false);
+  const fetchSeqRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
   const currentSource = sources[sourceIdx];
 
-  const LANG_CODE_MAP: Record<string, string> = {
-    hi_dub: "hi", ta_dub: "ta", te_dub: "te",
-    ml_dub: "ml", es_dub: "es", en_dub: "en",
-  };
   const streamLang = targetAudioLang ? LANG_CODE_MAP[targetAudioLang] || targetAudioLang.replace("_dub", "") : undefined;
 
   const isDirectMagnet = Boolean(magnetParam);
 
   // ── fetchSources: either from a magnet param or from the language route ──
   const fetchSources = useCallback(async () => {
-    if (!numId) return;
+    if (!validId) return;
+    const seq = ++fetchSeqRef.current;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoadingSources(true);
 
     if (magnetParam) {
@@ -69,16 +95,18 @@ export default function Watch() {
         languages: ["en"],
         isEmbed: false,
         playUrl: null,
-        providerId: `torrent_${magnetParam ? "manual" : "auto"}`,
+        providerId: "torrent_manual",
       };
 
       try {
         const result = await mediaStreamApi.getStream(
-          numId, type as "movie" | "tv",
-          type === "tv" ? season : undefined,
-          type === "tv" ? episode : undefined,
-          streamLang
+          numId, validType,
+          validType === "tv" ? season : undefined,
+          validType === "tv" ? episode : undefined,
+          streamLang,
+          controller.signal
         );
+        if (seq !== fetchSeqRef.current) return;
         // Prepend magnet source, then API sources as fallback
         const allSources = [magnetSource, ...result.sources];
         setSources(allSources);
@@ -92,7 +120,9 @@ export default function Watch() {
             kind: "subtitles" as const,
           }))
         );
-      } catch {
+      } catch (err) {
+        if (seq !== fetchSeqRef.current) return;
+        console.error("fetchSources (magnet) failed", err);
         // API failed — just use the magnet source alone
         setSources([magnetSource]);
         sourcesLenRef.current = 1;
@@ -109,11 +139,13 @@ export default function Watch() {
     // No magnet — fetch existing embed/direct sources
     try {
       const result = await mediaStreamApi.getStream(
-        numId, type as "movie" | "tv",
-        type === "tv" ? season : undefined,
-        type === "tv" ? episode : undefined,
-        streamLang
+        numId, validType,
+        validType === "tv" ? season : undefined,
+        validType === "tv" ? episode : undefined,
+        streamLang,
+        controller.signal
       );
+      if (seq !== fetchSeqRef.current) return;
 
       setSources(result.sources);
       sourcesLenRef.current = result.sources.length;
@@ -130,20 +162,28 @@ export default function Watch() {
       sourceIdxRef.current = 0;
       setPlayerKey((k) => k + 1);
       setFailoverMsg("");
-    } catch {
+    } catch (err) {
+      if (seq !== fetchSeqRef.current) return;
+      console.error("fetchSources failed", err);
+      setSources([]);
+      sourcesLenRef.current = 0;
       setFailoverMsg("Failed to load sources. Try again later.");
     }
     setLoadingSources(false);
-  }, [numId, type, season, episode, streamLang, magnetParam]);
+  }, [numId, validType, validId, season, episode, streamLang, magnetParam]);
 
   useEffect(() => {
     fetchSources();
   }, [fetchSources]);
 
+  useEffect(() => {
+    return () => abortRef.current?.abort();
+  }, []);
+
   const seasonData = useQuery({
     queryKey: ["season", numId, season],
     queryFn: () => tmdbApi.season(numId, season),
-    enabled: type === "tv",
+    enabled: validType === "tv" && validId,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -151,14 +191,14 @@ export default function Watch() {
     if (data) {
       const payload = {
         ...data,
-        media_type: type as MediaType,
-        season: type === "tv" ? season : undefined,
-        episode: type === "tv" ? episode : undefined,
+        media_type: validType,
+        season: validType === "tv" ? season : undefined,
+        episode: validType === "tv" ? episode : undefined,
         updatedAt: Date.now(),
       };
       addToHistory(payload);
     }
-  }, [data, type, season, episode, addToHistory]);
+  }, [data, validType, season, episode, addToHistory]);
 
   useEffect(() => {
     if (streamLang && sources.length > 0) {
@@ -172,56 +212,43 @@ export default function Watch() {
       lastProgressTime.current = Date.now();
       upsertProgress({
         ...data,
-        media_type: type as MediaType,
-        season: type === "tv" ? season : undefined,
-        episode: type === "tv" ? episode : undefined,
+        media_type: validType,
+        season: validType === "tv" ? season : undefined,
+        episode: validType === "tv" ? episode : undefined,
         progress: Math.min(Math.round(progress), 95),
         updatedAt: Date.now(),
       });
     }
-  }, [data, type, season, episode, upsertProgress]);
+  }, [data, validType, season, episode, upsertProgress]);
 
   const handlePrevEpisode = useCallback(() => {
     if (episode > 1) {
       setEpisode((e) => e - 1);
     } else if (season > 1) {
+      const seasons = data?.seasons as SeasonSummary[] | undefined;
+      const prevSeason = seasons?.find((s) => s.season_number === season - 1);
       setSeason((s) => s - 1);
+      setEpisode(prevSeason && prevSeason.episode_count > 0 ? prevSeason.episode_count : 1);
     }
-  }, [episode, season]);
+  }, [episode, season, data?.seasons]);
 
   const handleNextEpisode = useCallback(() => {
     const episodes = seasonData.data?.episodes || [];
     if (episode < episodes.length) {
       setEpisode((e) => e + 1);
+    } else {
+      const seasons = data?.seasons as SeasonSummary[] | undefined;
+      const nextSeason = seasons?.find((s) => s.season_number === season + 1);
+      if (nextSeason) {
+        setSeason((s) => s + 1);
+        setEpisode(1);
+      }
     }
-  }, [episode, seasonData.data?.episodes]);
+  }, [episode, season, seasonData.data?.episodes, data?.seasons]);
 
   const episodes = seasonData.data?.episodes || [];
   const hasPrev = episode > 1;
   const hasNext = episode < episodes.length;
-
-    // Auto-fallback: if source doesn't produce progress in 60s, try next
-  useEffect(() => {
-    if (sourcesLenRef.current <= 1) return;
-    const current = sources[sourceIdxRef.current];
-    if (current?.playUrl) return;
-
-    playerLoadedRef.current = false;
-    lastProgressTime.current = Date.now();
-    const timeoutMs = current?.isEmbed ? 30000 : current?.provider === "Torrent" ? 90000 : 60000;
-    autoFallbackTimer.current = setTimeout(() => {
-      if (playerLoadedRef.current) return;
-      const elapsed = Date.now() - lastProgressTime.current;
-      if (elapsed >= timeoutMs && sourceIdxRef.current < sourcesLenRef.current - 1) {
-        const nextIdx = sourceIdxRef.current + 1;
-        setFailoverMsg(`Source ${sourceIdxRef.current + 1} timed out, trying next...`);
-        setSourceIdx(nextIdx);
-        sourceIdxRef.current = nextIdx;
-        setPlayerKey((k) => k + 1);
-      }
-    }, timeoutMs);
-    return () => clearTimeout(autoFallbackTimer.current);
-  }, [playerKey, sources]);
 
   const setSource = useCallback((idx: number) => {
     sourceIdxRef.current = idx;
@@ -230,6 +257,26 @@ export default function Watch() {
     setFailoverMsg("");
   }, []);
 
+  // Auto-fallback: if source doesn't produce progress in time, try next
+  useEffect(() => {
+    if (sourcesLenRef.current <= 1) return;
+    const current = sources[sourceIdxRef.current];
+
+    playerLoadedRef.current = false;
+    lastProgressTime.current = Date.now();
+    const timeoutMs = current?.isEmbed ? 30000 : current?.provider === "Torrent" ? 90000 : 60000;
+    autoFallbackTimer.current = setInterval(() => {
+      const elapsed = Date.now() - lastProgressTime.current;
+      if (elapsed < timeoutMs) return;
+      if (current?.isEmbed && playerLoadedRef.current) return;
+      if (sourceIdxRef.current >= sourcesLenRef.current - 1) return;
+      const nextIdx = sourceIdxRef.current + 1;
+      setFailoverMsg(`Source ${sourceIdxRef.current + 1} timed out, trying next...`);
+      setSource(nextIdx);
+    }, 5000);
+    return () => clearInterval(autoFallbackTimer.current);
+  }, [playerKey, sources, setSource]);
+
   const saved = data ? inWatchlist(numId) : false;
 
   return (
@@ -237,7 +284,7 @@ export default function Watch() {
       <div className="min-h-dvh pt-14 sm:pt-16">
         <div className="mx-auto max-w-[1600px] px-2 sm:px-3 py-3 sm:py-4 md:px-6">
           <button
-            onClick={() => navigate(`/title/${type}/${numId}`)}
+            onClick={() => navigate(`/title/${validType}/${numId}`)}
             className="mb-4 flex items-center gap-1 text-sm text-zinc-400 transition hover:text-white"
           >
             <ChevronLeft width={18} height={18} /> Back to details
@@ -263,7 +310,7 @@ export default function Watch() {
                     subtitles={subtitles}
                     isEmbed={currentSource.isEmbed}
                     onProgress={handleProgress}
-                    onEmbedLoad={() => { playerLoadedRef.current = true; }}
+                    onEmbedLoad={() => { playerLoadedRef.current = true; lastProgressTime.current = Date.now(); }}
                     onError={() => {
                       if (sourceIdxRef.current < sourcesLenRef.current - 1) {
                         const nextIdx = sourceIdxRef.current + 1;
@@ -273,10 +320,10 @@ export default function Watch() {
                         setFailoverMsg("All sources failed. Try again later.");
                       }
                     }}
-                    onPrevEpisode={type === "tv" ? handlePrevEpisode : undefined}
-                    onNextEpisode={type === "tv" ? handleNextEpisode : undefined}
-                    hasPrev={type === "tv" && hasPrev}
-                    hasNext={type === "tv" && hasNext}
+                    onPrevEpisode={validType === "tv" ? handlePrevEpisode : undefined}
+                    onNextEpisode={validType === "tv" ? handleNextEpisode : undefined}
+                    hasPrev={validType === "tv" && hasPrev}
+                    hasNext={validType === "tv" && hasNext}
                   />
                   {failoverMsg && (
                     <div className="mt-2 rounded-md bg-red-600/90 px-3 py-1.5 text-center text-xs font-bold text-white shadow-lg">
@@ -311,7 +358,7 @@ export default function Watch() {
                   </span>
                 )}
                 <button
-                  onClick={() => navigate(`/sources/${type}/${numId}`)}
+                  onClick={() => navigate(`/sources/${validType}/${numId}`)}
                   className="ml-auto flex items-center gap-1 text-xs font-semibold text-violet-400 transition hover:text-violet-300"
                 >
                   {isDirectMagnet ? "Other torrents" : "Torrent sources"}
@@ -325,7 +372,7 @@ export default function Watch() {
                     <Star width={14} height={14} />
                     {data.vote_average?.toFixed(1)}
                   </span>
-                  {type === "tv" && (
+                  {validType === "tv" && (
                     <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
                       S{season} · E{episode}
                     </span>
@@ -334,7 +381,7 @@ export default function Watch() {
                   <div className="ml-auto flex items-center gap-2">
                     <button
                       onClick={() =>
-                        toggleWatchlist({ ...data, media_type: type as MediaType })
+                        toggleWatchlist({ ...data, media_type: validType })
                       }
                       className="flex items-center gap-2 rounded-full glass px-4 py-2 text-sm transition hover:bg-white/15"
                     >
@@ -404,7 +451,7 @@ export default function Watch() {
             </div>
 
             <div className="space-y-4">
-              {type === "tv" && data?.seasons && (
+              {validType === "tv" && data?.seasons && (
                 <div className="glass rounded-2xl p-4">
                   <div className="mb-3 flex items-center gap-2">
                     <h3 className="font-bold">Episodes</h3>
@@ -417,8 +464,8 @@ export default function Watch() {
                       className="ml-auto rounded-lg border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm outline-none"
                     >
                       {data.seasons
-                        .filter((s: any) => s.season_number > 0)
-                        .map((s: any) => (
+                        .filter((s: SeasonSummary) => s.season_number > 0)
+                        .map((s: SeasonSummary) => (
                           <option key={s.id} value={s.season_number}>
                             Season {s.season_number}
                           </option>
@@ -430,7 +477,7 @@ export default function Watch() {
                       ? Array.from({ length: 6 }).map((_, i) => (
                           <div key={i} className="h-20 rounded-xl shimmer" />
                         ))
-                      : episodes.map((ep: any) => (
+                      : episodes.map((ep: EpisodeItem) => (
                           <button
                             key={ep.id}
                             onClick={() => setEpisode(ep.episode_number)}

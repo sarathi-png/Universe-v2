@@ -7,6 +7,10 @@ const http = axios.create({ timeout: 8000, validateStatus: () => true });
 function getTmdbKey(): string {
   return process.env.TMDB_API_KEY || "";
 }
+
+function tmdbHeaders(): Record<string, string> {
+  return { Authorization: `Bearer ${getTmdbKey()}` };
+}
 const TPB_API = "https://apibay.org";
 const EZTV_API = "https://eztvx.to/api";
 
@@ -47,6 +51,8 @@ class TorrentEngine {
   private memoryWarning = 400 * 1024 * 1024;
   private evictInterval: ReturnType<typeof setInterval> | null = null;
   private warned = false;
+  private inFlight = new Map<string, Promise<any>>();
+  private addChain: Promise<void> = Promise.resolve();
 
   constructor() {
     this.maxActive = parseInt(process.env.MAX_ACTIVE_TORRENTS || "3");
@@ -73,7 +79,30 @@ class TorrentEngine {
     const c = await this.getClient();
     if (!c) throw new Error("Torrent engine unavailable");
 
-    const existing = await c.get(magnet);
+    const key = extractInfoHash(magnet) || magnet;
+
+    const existing = await c.get(key);
+    if (existing) {
+      this.accessLog.set(existing.infoHash, Date.now());
+      return existing;
+    }
+
+    const pending = this.inFlight.get(key);
+    if (pending) return pending;
+
+    const run = this.addChain.then(() => this.addNew(c, magnet, key));
+    this.addChain = run.then(() => undefined, () => undefined);
+    this.inFlight.set(key, run);
+    run.then(
+      () => { if (this.inFlight.get(key) === run) this.inFlight.delete(key); },
+      () => { if (this.inFlight.get(key) === run) this.inFlight.delete(key); }
+    );
+
+    return run;
+  }
+
+  private async addNew(c: any, magnet: string, key: string): Promise<any> {
+    const existing = await c.get(key);
     if (existing) {
       this.accessLog.set(existing.infoHash, Date.now());
       return existing;
@@ -182,7 +211,7 @@ export const engine = new TorrentEngine();
 
 async function getMovieTitle(tmdbId: number): Promise<{ title: string; year?: string } | null> {
   try {
-    const res = await http.get(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${getTmdbKey()}`);
+    const res = await http.get(`https://api.themoviedb.org/3/movie/${tmdbId}`, { headers: tmdbHeaders() });
     const data = res.data as { title?: string; release_date?: string };
     if (!data.title) return null;
     const year = data.release_date ? data.release_date.split("-")[0] : undefined;
@@ -192,7 +221,7 @@ async function getMovieTitle(tmdbId: number): Promise<{ title: string; year?: st
 
 async function getTVTitle(tmdbId: number): Promise<{ title: string; year?: string } | null> {
   try {
-    const res = await http.get(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${getTmdbKey()}`);
+    const res = await http.get(`https://api.themoviedb.org/3/tv/${tmdbId}`, { headers: tmdbHeaders() });
     const data = res.data as { name?: string; first_air_date?: string };
     if (!data.name) return null;
     const year = data.first_air_date ? data.first_air_date.split("-")[0] : undefined;
@@ -214,7 +243,7 @@ async function getImdbId(tmdbId: number, type: "movie" | "tv"): Promise<string |
     const endpoint = type === "movie"
       ? `https://api.themoviedb.org/3/movie/${tmdbId}/external_ids`
       : `https://api.themoviedb.org/3/tv/${tmdbId}/external_ids`;
-    const res = await http.get(`${endpoint}?api_key=${getTmdbKey()}`);
+    const res = await http.get(endpoint, { headers: tmdbHeaders() });
     const data = res.data as { imdb_id?: string };
     if (data.imdb_id) { imdbCache.set(key, data.imdb_id); return data.imdb_id; }
     return null;
@@ -265,7 +294,10 @@ export async function searchMovieTorrents(tmdbId: number): Promise<TorrentSource
             source: "TPB",
             languages: [] as string[],
           }));
-      }).catch(() => [] as ScrapedTorrent[])
+      }).catch((e) => {
+        console.error("[torrents] TPB search failed:", e);
+        return [] as ScrapedTorrent[];
+      })
     );
   }
 
@@ -319,7 +351,9 @@ export async function searchTVTorrents(tmdbId: number, season: number, episode: 
           }
         }
       }
-    } catch {}
+    } catch (err) {
+      console.error("[torrents] EZTV search failed:", err);
+    }
   }
 
   if (meta) {
@@ -382,10 +416,14 @@ export async function handleTorrentStream(req: Request, res: Response): Promise<
 
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
-      start = parseInt(parts[0], 10);
-      if (isNaN(start)) start = 0;
-      end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      if (isNaN(end)) end = fileSize - 1;
+      const parsedStart = parseInt(parts[0], 10);
+      const parsedEnd = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      start = isNaN(parsedStart) ? 0 : parsedStart;
+      end = isNaN(parsedEnd) ? fileSize - 1 : parsedEnd;
+      if (start < 0 || end >= fileSize || start > end) {
+        res.status(400).json({ error: "Invalid range" });
+        return;
+      }
     }
 
     const chunkSize = end - start + 1;
@@ -403,19 +441,25 @@ export async function handleTorrentStream(req: Request, res: Response): Promise<
     res.writeHead(range ? 206 : 200, headers);
 
     const stream = engine.createReadStream(file, start, end);
+    req.on("close", () => { stream.destroy(); });
+    stream.on("error", (err: any) => {
+      console.error("[torrent] stream error:", err?.message || err);
+      if (!res.headersSent) res.end();
+    });
     stream.pipe(res);
-    stream.on("error", () => { if (!res.headersSent) res.end(); });
-  } catch (err: any) {
+  } catch (err) {
+    console.error("[torrent] stream failed:", err);
     if (!res.headersSent) {
-      res.status(502).json({ error: "Stream failed", message: err.message });
+      res.status(502).json({ error: "Stream failed" });
     }
   }
 }
 
 export function safeTorrentStream(req: Request, res: Response): void {
   handleTorrentStream(req, res).catch((err) => {
+    console.error("[torrent] safeTorrentStream failed:", err);
     if (!res.headersSent) {
-      res.status(500).json({ error: "Torrent stream error", message: String(err) });
+      res.status(500).json({ error: "Torrent stream error" });
     }
   });
 }
