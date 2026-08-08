@@ -21,7 +21,7 @@ tmdbRouter.get("/trending/:type/:window", async (req: Request, res: Response) =>
   try {
     const type = paramStr(req.params.type);
     const window = paramStr(req.params.window);
-    if (!VALID_TYPES.has(type) || !["day", "week"].includes(window)) {
+    if (!["all", ...VALID_TYPES].includes(type) || !["day", "week"].includes(window)) {
       res.status(400).json({ error: "Invalid type or window" });
       return;
     }
