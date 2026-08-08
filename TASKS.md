@@ -35,6 +35,4 @@ REVIEW_REQUIRED: false
 
 | ID | Task | Completed | Notes |
 |----|------|-----------|-------|
-| 2 | Low/Info audit pass (43 findings) | 2026-08-08 | 41 files, commit f7b0658 pushed; typecheck+build+smoke test pass |
-| 1 | Comprehensive bug-fix pass (20 files) | 2026-08-08 | Audit 139 issues; commit 42451c5 pushed |
-| 0 | Initial setup | 2026-08-07 | Project context configured |
+| — | All prior tasks (0-2) verified implemented | 2026-08-08 | Bug-fix pass `42451c5`, Low/Info pass `f7b0658`, docs `9d3ebb9` — all pushed, typecheck+build+smoke test green |
