@@ -18,14 +18,6 @@ export const useUpcoming = () =>
 export const useAiringToday = () =>
   useQuery({ queryKey: ["airing"], queryFn: () => tmdbApi.airingToday(), ...opts });
 
-export const useByGenre = (type: MediaType, genreId: number, enabled = true) =>
-  useQuery({
-    queryKey: ["genre", type, genreId],
-    queryFn: () => tmdbApi.byGenre(type, genreId).then((d) => d.results),
-    enabled,
-    ...opts,
-  });
-
 export const useDiscover = (type: MediaType, params: Record<string, any>, enabled = true) =>
   useQuery({
     queryKey: ["discover", type, params],

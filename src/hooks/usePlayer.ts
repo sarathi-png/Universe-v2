@@ -15,13 +15,6 @@ export interface SubtitleTrack {
   kind: "subtitles" | "captions";
 }
 
-export interface QualityLevel {
-  id: number;
-  width: number;
-  height: number;
-  bitrate: number;
-}
-
 interface PlayerState {
   playing: boolean;
   currentTime: number;
@@ -32,7 +25,6 @@ interface PlayerState {
   activeAudioTrack: number;
   subtitleTracks: SubtitleTrack[];
   activeSubtitleTrack: number;
-  qualityLevels: QualityLevel[];
   activeQuality: number;
   playbackSpeed: number;
   volume: number;
@@ -66,7 +58,6 @@ export function usePlayer() {
     activeAudioTrack: -1,
     subtitleTracks: [],
     activeSubtitleTrack: -1,
-    qualityLevels: [],
     activeQuality: -1,
     playbackSpeed: 1,
     volume: 1,
@@ -131,12 +122,6 @@ export function usePlayer() {
             name: t.name || t.lang || `Track ${i + 1}`,
             language: t.lang || "unknown",
           }));
-          const qualityLevels = (hls.levels || []).map((l, i) => ({
-            id: i,
-            width: l.width,
-            height: l.height,
-            bitrate: l.bitrate,
-          }));
           const allSubs: SubtitleTrack[] = [...(externalSubtitles || [])];
           hls.subtitleTracks?.forEach((t, i) => {
             allSubs.push({
@@ -149,7 +134,6 @@ export function usePlayer() {
           update({
             audioTracks,
             activeAudioTrack: hls.audioTrack,
-            qualityLevels,
             activeQuality: hls.autoLevelEnabled ? -1 : hls.currentLevel,
             buffering: false,
             duration: video.duration,
@@ -284,18 +268,6 @@ export function usePlayer() {
     update({ activeSubtitleTrack: id });
   }, [update]);
 
-  const setQuality = useCallback((id: number) => {
-    const hls = hlsRef.current;
-    if (!hls) return;
-    if (id === -1) {
-      hls.currentLevel = -1;
-      update({ activeQuality: -1 });
-    } else if (hls.levels[id]) {
-      hls.currentLevel = id;
-      update({ activeQuality: id });
-    }
-  }, [update]);
-
   const setPlaybackSpeed = useCallback((speed: number) => {
     const video = videoRef.current;
     if (video) {
@@ -346,7 +318,6 @@ export function usePlayer() {
     toggleMute,
     setAudioTrack,
     setSubtitleTrack,
-    setQuality,
     setPlaybackSpeed,
     skipIntro,
     toggleFullscreen,

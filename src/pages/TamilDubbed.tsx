@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -91,17 +91,24 @@ export default function TamilDubbed() {
   const popularItems = popularData?.items ?? [];
   const cachedItems = cachedData?.items ?? [];
 
-  const cachedByTmdb = new Map<number, boolean>();
-  for (const c of cachedItems) {
-    if (c.tmdbId) cachedByTmdb.set(c.tmdbId, true);
-  }
-
-  const mergedPopular = popularItems.map((item) => {
-    if (!item.cached && cachedByTmdb.has(item.tmdbId)) {
-      return { ...item, cached: true };
+  const cachedByTmdb = useMemo(() => {
+    const map = new Map<number, boolean>();
+    for (const c of cachedItems) {
+      if (c.tmdbId) map.set(c.tmdbId, true);
     }
-    return item;
-  });
+    return map;
+  }, [cachedItems]);
+
+  const mergedPopular = useMemo(
+    () =>
+      popularItems.map((item) => {
+        if (!item.cached && cachedByTmdb.has(item.tmdbId)) {
+          return { ...item, cached: true };
+        }
+        return item;
+      }),
+    [popularItems, cachedByTmdb]
+  );
 
   const filtered = search
     ? mergedPopular.filter((i) => i.title.toLowerCase().includes(search.toLowerCase()))
@@ -110,7 +117,7 @@ export default function TamilDubbed() {
   const cached = filtered.filter((i) => i.cached);
 
   // Filter movies with duration > 40 minutes for "Ready to Play" section
-  const parseDuration = (duration: string | null): number => {
+  const parseDuration = useCallback((duration: string | null): number => {
     if (!duration || duration.toLowerCase().includes('not available')) return 0;
     const str = duration.toLowerCase();
     if (str.includes(':')) {
@@ -130,7 +137,7 @@ export default function TamilDubbed() {
       if (match) return parseFloat(match[1]);
     }
     return 0;
-  };
+  }, []);
 
   const extraCached = cachedItems.filter(
     (c) => c.tmdbId && !mergedPopular.some((p) => p.tmdbId === c.tmdbId)

@@ -48,7 +48,9 @@ tamilmvRouter.get("/sources/:tmdbId", async (req, res) => {
           });
         }
       }
-    } catch {}
+    } catch (err) {
+      console.error("[tamilmv] 1TamilMV lookup failed:", err);
+    }
 
     // 2. Also search general scrapers (YTS etc.) for more options
     try {
@@ -75,7 +77,9 @@ tamilmvRouter.get("/sources/:tmdbId", async (req, res) => {
           }
         }
       }
-    } catch {}
+    } catch (err) {
+      console.error("[tamilmv] TMDB lookup failed:", err);
+    }
 
     // Sort: Tamil sources first, then general
     sources.sort((a, b) => {

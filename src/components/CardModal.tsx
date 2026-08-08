@@ -116,6 +116,9 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
           <motion.div
             ref={modalRef}
             tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label={name}
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 30 }}
@@ -125,6 +128,7 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
           >
             <button
               onClick={onClose}
+              aria-label="Close"
               className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 p-1.5 sm:p-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             >
               <Close width={16} height={16} className="sm:w-[20px] sm:h-[20px]" />
@@ -134,8 +138,9 @@ export default function CardModal({ isOpen, item, onClose }: CardModalProps) {
             <div className="relative h-[25vh] sm:h-[35vh] md:h-[45vh] overflow-hidden rounded-t-2xl sm:rounded-t-3xl">
               {backdrop ? (
                 <img
-                  src={IMG.backdrop(backdrop, "original")}
+                  src={IMG.backdrop(backdrop, "w1280")}
                   alt={name}
+                  loading="lazy"
                   className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
                   onLoad={() => setImgLoaded(true)}
                   onError={(e) => (e.currentTarget.style.display = "none")}

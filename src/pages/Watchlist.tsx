@@ -59,7 +59,7 @@ export default function Watchlist() {
           {tab === "list" && (
             <select 
               value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as "recent" | "alpha" | "rating")}
               className="rounded-full bg-white/5 py-2 px-4 text-sm outline-none border border-white/10 focus:border-violet-500 cursor-pointer"
             >
               <option value="recent" className="bg-black">Recently Added</option>
@@ -90,9 +90,13 @@ export default function Watchlist() {
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl glass">
             <Bookmark width={36} height={36} className="text-zinc-600" />
           </div>
-          <h2 className="text-xl font-bold">Your list is empty</h2>
+          <h2 className="text-xl font-bold">
+            {tab === "list" ? "Your list is empty" : "No watch history yet"}
+          </h2>
           <p className="max-w-sm text-zinc-500">
-            Add movies and shows to keep track of what you want to watch.
+            {tab === "list"
+              ? "Add movies and shows to keep track of what you want to watch."
+              : "Titles you watch will appear here."}
           </p>
           <Link
             to="/"
@@ -103,7 +107,7 @@ export default function Watchlist() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-          {watchlist.map((item, i) => (
+          {displayItems.map((item, i) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, scale: 0.9 }}

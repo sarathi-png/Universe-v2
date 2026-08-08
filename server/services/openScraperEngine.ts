@@ -53,7 +53,6 @@ export interface ScraperSource {
 
 export interface ScraperResult {
   sources: ScraperSource[];
-  providerCount: number;
 }
 
 async function scrapeDirectSource(
@@ -103,19 +102,6 @@ export async function scrapeAll(
 
   return {
     sources,
-    providerCount: sources.length,
   };
 }
 
-export async function scrapeBest(
-  tmdbId: number,
-  type: "movie" | "tv",
-  season?: number,
-  episode?: number
-): Promise<ScraperSource | null> {
-  for (const provider of PROVIDERS) {
-    const source = await scrapeDirectSource(provider, tmdbId, type, season, episode);
-    if (source) return source;
-  }
-  return null;
-}

@@ -63,6 +63,7 @@ export default function ContinueWatchingRow({
             </button>
             <button
               onClick={() => removeProgress(item.id)}
+              aria-label="Remove from continue watching"
               className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 opacity-0 transition-opacity group-hover:opacity-100"
             >
               <Close width={14} height={14} />

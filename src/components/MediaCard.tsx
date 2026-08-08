@@ -19,7 +19,6 @@ import { smooth } from "../styles/animationPresets";
 
 interface Props {
   item: MediaItem;
-  index?: number;
   rank?: number;
 }
 

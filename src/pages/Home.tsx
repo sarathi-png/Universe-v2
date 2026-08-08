@@ -15,6 +15,14 @@ import {
 } from "../hooks/queries";
 import { getPersonalizedPicks } from "../utils/recommendations";
 
+const PARTICLE_COLORS = [
+  "139, 92, 246",
+  "6, 182, 212",
+  "217, 70, 239",
+  "244, 63, 94",
+  "167, 139, 250",
+];
+
 export default function Home() {
   const trending = useTrending("week");
   const trendingDay = useTrending("day");
@@ -45,13 +53,7 @@ export default function Home() {
       <ParticleCanvas
         count={70}
         maxSpeed={0.8}
-        colors={[
-          "139, 92, 246",
-          "6, 182, 212",
-          "217, 70, 239",
-          "244, 63, 94",
-          "167, 139, 250",
-        ]}
+        colors={PARTICLE_COLORS}
         interactive
         className="z-0"
       />

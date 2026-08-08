@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 // pseudo-ambient color derived from id for consistent glow per item
 const PALETTES = [
@@ -9,14 +9,12 @@ const PALETTES = [
   ["#10b981", "#0891b2"],
   ["#ef4444", "#f59e0b"],
   ["#6366f1", "#06b6d4"],
-];
+] as const;
 
-export function useAmbientColor(seed?: number | string) {
-  const [colors, setColors] = useState<[string, string]>(["#7c3aed", "#2563eb"]);
-  useEffect(() => {
+export function useAmbientColor(seed?: number | string): [string, string] {
+  return useMemo(() => {
     const n = typeof seed === "number" ? seed : (seed || "").length;
     const p = PALETTES[Math.abs(n) % PALETTES.length];
-    setColors([p[0], p[1]]);
+    return [p[0], p[1]];
   }, [seed]);
-  return colors;
 }

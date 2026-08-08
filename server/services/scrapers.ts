@@ -412,13 +412,10 @@ export async function searchAllV2(query: string, options: SearchOptions = {}): P
   ];
 
   for (const scraper of chain) {
-    console.log(`[searchV2] Trying ${scraper.name}...`);
     const results = await scraper.scrape(searchQuery);
     if (results.length > 0) {
-      console.log(`[searchV2] ${scraper.name} returned ${results.length} results — stopping chain`);
       return applyFilters(results, quality, lang, limit);
     }
-    console.log(`[searchV2] ${scraper.name} returned 0 — falling through`);
   }
 
   return [];

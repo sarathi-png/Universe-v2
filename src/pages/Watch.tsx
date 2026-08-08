@@ -7,6 +7,7 @@ import type { SubtitleTrack } from "../hooks/usePlayer";
 import { useDetails } from "../hooks/queries";
 import { useStore } from "../store/useStore";
 import Player from "../components/Player";
+import ErrorBoundary from "../components/ErrorBoundary";
 import LazyImage from "../components/LazyImage";
 import AgeGate from "../components/AgeGate";
 import {
@@ -302,6 +303,35 @@ export default function Watch() {
                 </div>
               ) : currentSource ? (
                 <div>
+                  <ErrorBoundary
+                    fallback={(err, reset) => (
+                      <div className="flex aspect-video w-full flex-col items-center justify-center rounded-2xl bg-player ring-1 ring-white/10 p-6 text-center">
+                        <Info width={32} height={32} className="mx-auto mb-2 text-zinc-500" />
+                        <p className="text-sm text-zinc-400">Player crashed: {err?.message || "Unknown error"}</p>
+                        <div className="mt-4 flex gap-3">
+                          <button
+                            onClick={() => {
+                              if (sourceIdxRef.current < sourcesLenRef.current - 1) {
+                                const nextIdx = sourceIdxRef.current + 1;
+                                setFailoverMsg(`Source ${sourceIdxRef.current + 1} failed, trying next...`);
+                                setSource(nextIdx);
+                              }
+                              reset();
+                            }}
+                            className="rounded-full bg-violet-600 px-5 py-2 text-xs font-bold transition hover:bg-violet-500"
+                          >
+                            Try next source
+                          </button>
+                          <button
+                            onClick={reset}
+                            className="rounded-full bg-white/10 px-5 py-2 text-xs font-bold transition hover:bg-white/20"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  >
                   <Player
                     key={playerKey}
                     src={currentSource.playUrl || currentSource.url}
@@ -325,6 +355,7 @@ export default function Watch() {
                     hasPrev={validType === "tv" && hasPrev}
                     hasNext={validType === "tv" && hasNext}
                   />
+                  </ErrorBoundary>
                   {failoverMsg && (
                     <div className="mt-2 rounded-md bg-red-600/90 px-3 py-1.5 text-center text-xs font-bold text-white shadow-lg">
                       {failoverMsg}

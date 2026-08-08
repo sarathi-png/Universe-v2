@@ -108,6 +108,8 @@ export default function SearchPage() {
           />
           <button
             onClick={voiceSearch}
+            aria-label="Voice search"
+            aria-pressed={listening}
             className={`absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full transition ${
               listening
                 ? "bg-red-500 text-white animate-pulse"

@@ -50,8 +50,6 @@ const get = async <T,>(
   return data;
 };
 
-export const rawGet = get;
-
 export const tmdbApi = {
   trending: (window: "day" | "week" = "week", type: "all" | MediaType = "all") =>
     get<{ results: MediaItem[] }>(`/trending/${type}/${window}`).then(

@@ -60,8 +60,14 @@ async function findAudioTrack(
       fileUrl,
     ]);
     let output = "";
+    const timeout = setTimeout(() => {
+      proc.kill();
+      trackCache.set(cacheKey, 1);
+      resolve(1);
+    }, 45_000);
     proc.stdout.on("data", (d: Buffer) => { output += d.toString(); });
     proc.on("close", (code) => {
+      clearTimeout(timeout);
       let track = 1;
       const normTarget = normalizeLang(targetLang);
       if (code === 0 && output) {
@@ -83,6 +89,7 @@ async function findAudioTrack(
       resolve(track);
     });
     proc.on("error", () => {
+      clearTimeout(timeout);
       trackCache.set(cacheKey, 1);
       resolve(1);
     });

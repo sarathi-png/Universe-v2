@@ -10,6 +10,7 @@ import { dubmvRouter } from "./routes/dubmv.js";
 import { searchV2Router } from "./routes/searchV2.js";
 import { tamilmvRouter } from "./routes/tamilmv.js";
 import { KeepWarm } from "./lib/keep-warm.js";
+import { rateLimit } from "./middleware/rateLimit.js";
 
 // Prevent WebTorrent microtask crashes from killing the server (Node v24 compat)
 const WT_PATTERNS = ["reading 'reserve'", "reading 'missing'"];
@@ -47,7 +48,16 @@ const corsOrigins = process.env.CORS_ORIGINS
   : DEFAULT_CORS_ORIGINS;
 
 app.use(cors({ origin: corsOrigins }));
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
+
+// Baseline security headers for all responses
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+});
 
 // Block popups / redirects from embed sources on the watch page
 app.use("/watch", (_req, res, next) => {
@@ -65,6 +75,24 @@ app.use("/api/torrent", torrentRouter);
 app.use("/api/dubmv", dubmvRouter);
 app.use("/api/search/v2", searchV2Router);
 app.use("/api/tamilmv", tamilmvRouter);
+
+// Rate limit expensive scraping endpoints
+app.use(
+  "/api/language/scan",
+  rateLimit({ windowMs: 60_000, max: 10, message: "Too many scan requests, slow down" })
+);
+app.use(
+  "/api/language/media",
+  rateLimit({ windowMs: 60_000, max: 20, message: "Too many media requests, slow down" })
+);
+app.use(
+  "/api/dubmv/scrape",
+  rateLimit({ windowMs: 60_000, max: 10, message: "Too many scrape requests, slow down" })
+);
+app.use(
+  "/api/tamilmv",
+  rateLimit({ windowMs: 60_000, max: 30, message: "Too many requests, slow down" })
+);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", version: "2.0.0", timestamp: Date.now() });
@@ -127,6 +155,12 @@ video{width:100%;height:100dvh;outline:none}
 // Serve built frontend in production
 const distPath = path.join(__dirname, "../dist");
 app.use(express.static(distPath));
+
+// Unknown API paths get a JSON 404 (before the SPA fallback)
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+
 app.get("*", (_req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });

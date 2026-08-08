@@ -39,7 +39,6 @@ export default function Browse() {
   const [age, setAge] = useState<string>("");
 
   const [items, setItems] = useState<MediaItem[]>([]);
-  const filteredItems = items;
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -48,11 +47,14 @@ export default function Browse() {
   const seqRef = useRef(0);
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(hasMore);
-  hasMoreRef.current = hasMore;
   const pageRef = useRef(page);
-  pageRef.current = page;
 
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+    pageRef.current = page;
+  }, [hasMore, page]);
 
   const load = useCallback(
     async (p: number, reset = false) => {
@@ -205,17 +207,17 @@ export default function Browse() {
           </button>
         </div>
       )}
-      {filteredItems.length === 0 && !loading && !error && (
+      {items.length === 0 && !loading && !error && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-lg font-semibold text-zinc-400">
             {mt === "tv" ? "No TV shows found" : "No movies found"}
           </p>
-          <p className="mt-1 text-sm text-zinc-600">Try a different filter combination.</p>
+          <p className="mt-1 text-sm text-zinc-400">Try a different filter combination.</p>
         </div>
       )}
-      {(filteredItems.length > 0 || loading) && (
+      {(items.length > 0 || loading) && (
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-        {filteredItems.map((item, i) => (
+        {items.map((item, i) => (
           <motion.div
             key={item.id}
             initial={{ opacity: 0, y: 20 }}

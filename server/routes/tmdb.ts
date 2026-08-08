@@ -3,11 +3,29 @@ import { fetchTMDB } from "../utils/tmdb.js";
 
 export const tmdbRouter = Router();
 
+const VALID_TYPES = new Set(["movie", "tv"]);
+
+function parsePage(raw: unknown): string {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const page = parseInt(String(value || "1"));
+  if (!Number.isInteger(page) || page < 1) return "1";
+  return String(Math.min(page, 500));
+}
+
+function paramStr(v: string | string[] | undefined): string {
+  return Array.isArray(v) ? v[0] : String(v ?? "");
+}
+
 // Trending
 tmdbRouter.get("/trending/:type/:window", async (req: Request, res: Response) => {
   try {
-    const { type, window } = req.params;
-    const page = (req.query.page as string) || "1";
+    const type = paramStr(req.params.type);
+    const window = paramStr(req.params.window);
+    if (!VALID_TYPES.has(type) || !["day", "week"].includes(window)) {
+      res.status(400).json({ error: "Invalid type or window" });
+      return;
+    }
+    const page = parsePage(req.query.page);
     const data = await fetchTMDB(`/trending/${type}/${window}`, { page });
     res.json(data);
   } catch (err) {
@@ -20,8 +38,12 @@ tmdbRouter.get("/trending/:type/:window", async (req: Request, res: Response) =>
 // Popular
 tmdbRouter.get("/:type/popular", async (req: Request, res: Response) => {
   try {
-    const { type } = req.params;
-    const page = (req.query.page as string) || "1";
+    const type = paramStr(req.params.type);
+    if (!VALID_TYPES.has(type)) {
+      res.status(400).json({ error: "Invalid type" });
+      return;
+    }
+    const page = parsePage(req.query.page);
     const region = (req.query.region as string) || "";
     const params: Record<string, string> = { page };
     if (region) params.region = region;
@@ -37,8 +59,12 @@ tmdbRouter.get("/:type/popular", async (req: Request, res: Response) => {
 // Top Rated
 tmdbRouter.get("/:type/top_rated", async (req: Request, res: Response) => {
   try {
-    const { type } = req.params;
-    const page = (req.query.page as string) || "1";
+    const type = paramStr(req.params.type);
+    if (!VALID_TYPES.has(type)) {
+      res.status(400).json({ error: "Invalid type" });
+      return;
+    }
+    const page = parsePage(req.query.page);
     const data = await fetchTMDB(`/${type}/top_rated`, { page });
     res.json(data);
   } catch (err) {
@@ -93,7 +119,11 @@ tmdbRouter.get("/search/multi", async (req: Request, res: Response) => {
 // Season
 tmdbRouter.get("/tv/:id/season/:season", async (req: Request, res: Response) => {
   try {
-    const { id, season } = req.params;
+    const id = paramStr(req.params.id); const season = paramStr(req.params.season);
+    if (!Number.isInteger(Number(id)) || !Number.isInteger(Number(season))) {
+      res.status(400).json({ error: "Invalid id or season" });
+      return;
+    }
     const data = await fetchTMDB(`/tv/${id}/season/${season}`);
     res.json(data);
   } catch (err) {
@@ -106,7 +136,7 @@ tmdbRouter.get("/tv/:id/season/:season", async (req: Request, res: Response) => 
 // Discover
 tmdbRouter.get("/discover/:type", async (req: Request, res: Response) => {
   try {
-    const { type } = req.params;
+    const type = paramStr(req.params.type);
     const params: Record<string, string> = {};
     for (const [key, value] of Object.entries(req.query)) {
       if (value && typeof value === "string") params[key] = value;
@@ -124,7 +154,7 @@ tmdbRouter.get("/discover/:type", async (req: Request, res: Response) => {
 // Genres
 tmdbRouter.get("/genre/:type/list", async (req: Request, res: Response) => {
   try {
-    const { type } = req.params;
+    const type = paramStr(req.params.type);
     const data = await fetchTMDB(`/genre/${type}/list`);
     res.json(data);
   } catch (err) {
@@ -137,7 +167,11 @@ tmdbRouter.get("/genre/:type/list", async (req: Request, res: Response) => {
 // Details — catch-all for /:type/:id, keep at bottom
 tmdbRouter.get("/:type/:id", async (req: Request, res: Response) => {
   try {
-    const { type, id } = req.params;
+    const type = paramStr(req.params.type); const id = paramStr(req.params.id);
+    if (!VALID_TYPES.has(type) || !Number.isInteger(Number(id))) {
+      res.status(400).json({ error: "Invalid type or id" });
+      return;
+    }
     const data = await fetchTMDB(`/${type}/${id}`, {
       append_to_response:
         "videos,credits,similar,recommendations,reviews,images,release_dates,content_ratings",

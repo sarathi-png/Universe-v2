@@ -37,6 +37,7 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
 
         <button
           onClick={() => scroll(-1)}
+          aria-label="Scroll left"
           className="absolute left-0 top-0 z-30 hidden h-full w-10 items-center justify-center bg-gradient-to-r from-black/80 to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 md:w-12 md:flex"
         >
           <ChevronLeft width={28} height={28} />
@@ -66,7 +67,6 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
                 >
                   <MediaCard
                     item={item}
-                    index={i}
                     rank={numbered ? i + 1 : undefined}
                   />
                 </motion.div>
@@ -74,6 +74,7 @@ export default function Row({ title, items, loading, numbered, accent }: Props) 
         </div>
         <button
           onClick={() => scroll(1)}
+          aria-label="Scroll right"
           className="absolute right-0 top-0 z-30 hidden h-full w-10 items-center justify-center bg-gradient-to-l from-black/80 to-transparent opacity-0 transition-opacity group-hover/row:opacity-100 md:w-12 md:flex"
         >
           <ChevronRight width={28} height={28} />

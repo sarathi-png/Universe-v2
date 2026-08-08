@@ -24,7 +24,7 @@ export class KeepWarm {
 
   private getAgent() {
     if (this.url.startsWith('https://')) {
-      return new https.Agent({ rejectUnauthorized: false });
+      return new https.Agent();
     }
     return new http.Agent();
   }
@@ -32,8 +32,8 @@ export class KeepWarm {
   private ping(): void {
     const start = Date.now();
     const agent = this.getAgent();
-    (this.url.startsWith('https://') ? https : http)
-      .get(this.url, { agent }, (res) => {
+    const req = (this.url.startsWith('https://') ? https : http)
+      .get(this.url, { agent, timeout: 10_000 }, (res) => {
         let body = '';
         res.on('data', (c) => (body += c));
         res.on('end', () => {
@@ -43,5 +43,9 @@ export class KeepWarm {
       .on('error', (err) => {
         console.log(`[keepwarm] Error: ${err.message}`);
       });
+    req.on('timeout', () => {
+      req.destroy();
+      console.log(`[keepwarm] Timeout after 10s`);
+    });
   }
 }

@@ -131,7 +131,7 @@ export default function DubmvWatch() {
                   const isActive = i === sourceIdx;
                   return (
                     <button
-                      key={i}
+                      key={s.url || `${s.label}-${i}`}
                       onClick={() => setSourceIdx(i)}
                       className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition ${
                         isActive

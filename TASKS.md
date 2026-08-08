@@ -8,7 +8,8 @@
 
 | ID | Task | Status | Priority | Assigned | Notes |
 |----|------|--------|----------|----------|-------|
-| — | No active tasks | — | — | — | — |
+| 3 | Mobile app scaffold (Expo, streaming MVP) | pending | medium | orchestrator | Approved plan; start after web deploy confirmed |
+| 2 | Confirm Render deploy + spot-check site | in_progress | high | orchestrator | Pushed 42451c5 |
 
 ---
 
@@ -34,13 +35,5 @@ REVIEW_REQUIRED: false
 
 | ID | Task | Completed | Notes |
 |----|------|-----------|-------|
-| — | Initial setup | 2026-08-07 | Project context configured |
-
----
-
-## Backlog
-
-- [ ] Add test suite (Vitest + React Testing Library)
-- [ ] Set up ESLint + Prettier configuration
-- [ ] Add CI/CD pipeline (GitHub Actions)
-- [ ] Optimize Render deployment config
+| 1 | Comprehensive bug-fix pass (20 files) | 2026-08-08 | Audit 139 issues; typecheck+build pass; commit 42451c5 pushed |
+| 0 | Initial setup | 2026-08-07 | Project context configured |

@@ -510,7 +510,7 @@ export function getBestFileForLanguage(
   if (!cached || !cached.files || cached.files.length === 0) return null;
 
   const langFiles = cached.files.filter((f) =>
-    new RegExp(lang, "i").test(f.name)
+    f.name.toLowerCase().includes(lang.toLowerCase())
   );
 
   if (langFiles.length > 0) {

@@ -135,9 +135,9 @@ dubmvRouter.get("/proxy/:fileId", async (req, res) => {
     };
 
     // Step 1: fetch the player HTML page
-    const pageRes = await fetch(streamUrl, { headers });
+    const pageRes = await fetch(streamUrl, { headers, signal: AbortSignal.timeout(15000) });
     if (!pageRes.ok) {
-      res.status(pageRes.status).send("Stream page fetch failed");
+      res.status(pageRes.status).json({ error: "Stream page fetch failed" });
       return;
     }
     const html = await pageRes.text();
@@ -145,7 +145,7 @@ dubmvRouter.get("/proxy/:fileId", async (req, res) => {
     // Step 2: extract the actual video source URL from <source src="...">
     const srcMatch = html.match(/<source\s+src\s*=\s*["']([^"']+)["']/i);
     if (!srcMatch) {
-      res.status(502).send("No video source found in stream page");
+      res.status(502).json({ error: "No video source found in stream page" });
       return;
     }
     const videoUrl = srcMatch[1];
@@ -161,10 +161,13 @@ dubmvRouter.get("/proxy/:fileId", async (req, res) => {
     }
 
     // Step 4: fetch the actual video with range-awareness
-    const videoRes = await fetch(videoUrl, { headers: videoHeaders });
+    const videoRes = await fetch(videoUrl, {
+      headers: videoHeaders,
+      signal: AbortSignal.timeout(15000),
+    });
 
     if (!videoRes.ok && videoRes.status !== 206) {
-      res.status(videoRes.status).send("Video source fetch failed");
+      res.status(videoRes.status).json({ error: "Video source fetch failed" });
       return;
     }
 
@@ -185,7 +188,12 @@ dubmvRouter.get("/proxy/:fileId", async (req, res) => {
 
     await pipeline(Readable.fromWeb(videoRes.body as any), res);
   } catch (err) {
-    res.status(500).json({ error: "Stream proxy failed", message: String(err) });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Stream proxy failed", message: String(err) });
+    } else {
+      console.error("[dubmv] proxy stream error after headers sent:", err);
+      res.destroy();
+    }
   }
 });
 

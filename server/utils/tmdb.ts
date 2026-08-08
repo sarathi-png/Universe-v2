@@ -17,6 +17,7 @@ export async function fetchTMDB<T>(
 
   const res = await fetch(url, {
     headers: { accept: "application/json" },
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) {
     throw new Error(`TMDB API error ${res.status}: ${await res.text()}`);

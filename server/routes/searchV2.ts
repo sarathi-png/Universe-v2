@@ -14,9 +14,7 @@ searchV2Router.get("/", async (req, res) => {
 
     const quality = (req.query.quality as string) || "all";
     const lang = (req.query.lang as string) || "all";
-    const limit = Math.min(parseInt(req.query.limit as string) || 30, 50);
-
-    console.log(`[searchV2] q="${q}" quality=${quality} lang=${lang}`);
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 30), 50);
 
     const results = await searchByName(q, {
       quality: quality !== "all" ? quality : undefined,
@@ -39,11 +37,16 @@ searchV2Router.get("/", async (req, res) => {
 
 // Debug endpoint: shows per-scraper status
 searchV2Router.get("/debug", async (req, res) => {
-  const q = (req.query.q as string || "").trim();
-  if (!q) {
-    res.status(400).json({ error: 'Missing "q" parameter' });
-    return;
+  try {
+    const q = (req.query.q as string || "").trim();
+    if (!q) {
+      res.status(400).json({ error: 'Missing "q" parameter' });
+      return;
+    }
+    const result = await searchAllV2Debug(q);
+    res.json(result);
+  } catch (err) {
+    console.error("[searchV2] Debug search failed:", err);
+    res.status(500).json({ error: "Search failed", message: String(err) });
   }
-  const result = await searchAllV2Debug(q);
-  res.json(result);
 });

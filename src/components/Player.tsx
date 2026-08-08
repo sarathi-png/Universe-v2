@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePlayer, type SubtitleTrack, type AudioTrack } from "../hooks/usePlayer";
+import { usePlayer, type SubtitleTrack } from "../hooks/usePlayer";
 import { spring, smooth } from "../styles/animationPresets";
 
 let embedNavBlocker: ((e: Event) => void) | null = null;
@@ -30,7 +30,6 @@ interface PlayerProps {
   poster?: string;
   title?: string;
   subtitles?: SubtitleTrack[];
-  audioTracks?: AudioTrack[];
   isEmbed?: boolean;
   onProgress?: (progress: number, currentTime: number, duration: number) => void;
   onEmbedLoad?: () => void;
@@ -339,7 +338,14 @@ export default function Player({
               {/* Seek Bar */}
               <div
                 ref={seekBarRef}
-                className="group/seek mb-2 cursor-pointer"
+                role="slider"
+                aria-label="Seek"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(playerState.progress)}
+                aria-valuetext={`${formatTime(playerState.currentTime)} of ${formatTime(playerState.duration)}`}
+                tabIndex={0}
+                className="group/seek mb-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded"
                 onMouseDown={(e) => { seekDragging.current = true; seekDragMoved.current = false; lastSeekX.current = e.clientX; }}
                 onMouseUp={() => { seekDragging.current = false; }}
                 onMouseLeave={() => { seekDragging.current = false; }}
@@ -348,6 +354,14 @@ export default function Player({
                 onTouchStart={handleSeekTouch}
                 onTouchMove={handleSeekTouch}
                 onTouchEnd={() => { seekDragging.current = false; }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                    e.preventDefault();
+                    const step = e.key === "ArrowRight" ? 5 : -5;
+                    const next = Math.max(0, Math.min(100, playerState.progress + step));
+                    if (playerState.duration) seek((next / 100) * playerState.duration);
+                  }
+                }}
               >
                 <div className="relative h-1.5 rounded-full bg-white/20 transition-all duration-200 group-hover/seek:h-2">
                   <motion.div
@@ -622,5 +636,3 @@ function DropdownMenu({
     </div>
   );
 }
-
-export { Play } from "./icons";

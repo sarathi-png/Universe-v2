@@ -2,6 +2,7 @@ import { Component, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
+  fallback?: (error: Error | null, reset: () => void) => ReactNode;
 }
 interface State {
   hasError: boolean;
@@ -18,8 +19,14 @@ export default class ErrorBoundary extends Component<Props, State> {
     console.error("[ErrorBoundary]", error.message, "\nStack:", info.componentStack);
     this.setState({ componentStack: info.componentStack ?? "" });
   }
+  reset = () => {
+    this.setState({ hasError: false, error: null, componentStack: "" });
+  };
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback(this.state.error, this.reset);
+      }
       return (
         <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-8 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 text-2xl font-black text-white">
