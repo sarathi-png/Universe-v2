@@ -8,7 +8,7 @@
 
 | ID | Task | Status | Priority | Assigned | Notes |
 |----|------|--------|----------|----------|-------|
-| 5 | Deploy + verify mobile Watch Now + embed ad-block fixes | pending | high | orchestrator | Changes built; needs deploy + manual check |
+| 5 | Deploy + verify mobile Watch Now + embed ad-block fixes | pending | high | orchestrator | Sandbox reverted (broke IMA); blocker + labels shipped; needs push + manual check |
 | 4 | Mobile app scaffold (Expo, streaming MVP) | pending | medium | orchestrator | Approved plan; start after deploy confirmed |
 | 3 | Confirm Render deploy + spot-check site | in_progress | high | orchestrator | Pushed f7b0658 |
 

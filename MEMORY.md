@@ -1,5 +1,18 @@
 # Session Log — 2026-08-10
 
+## What Was Done (afternoon follow-up)
+- **Reverted embed sandbox**: vidsrc.su's ad SDK (Google IMA) refuses sandboxed frames ("This content can't be embedded in a sandboxed frame") → sandbox broke playback. Removed `sandbox` + `referrerPolicy` from `Player.tsx` iframe.
+- **Fixed beforeunload blocker**: old logic (reading `e.target.outerHTML` + hash trick) was dead/ineffective. Now `preventDefault() + returnValue=""` → Chrome/Firefox show a cancelable "Leave site?" prompt when an embed tries to redirect the top window (gated on user activation from the ad click).
+- **Source labels**: Watch.tsx mirror chips now read `Mirror · may show ads`; Clean sources keep green badge. Clean sources remain sorted first server-side.
+- **Verified**: typecheck + build green.
+
+## Next Steps
+- Commit/push, confirm Render deploy, re-test a Mirror source on `/watch` (playback works; ad redirects are cancelable).
+
+---
+
+# Session Log — 2026-08-10 (earlier)
+
 ## What Was Done
 - **Mobile "Watch Now" fix (Tamil Dubbed)**: `PopularCard`/`ExtraCachedCard` in `TamilDubbed.tsx` used `group-hover` reveal for the button — invisible on touch devices (Tailwind v4 gates hover behind `@media (hover:hover)`). Now visible by default on mobile (`md:translate-y-full md:group-hover:translate-y-0`), title bumped to `bottom-14 md:bottom-1`.
 - **Ad redirect fix (embeds)**: `Player.tsx` embed iframe now has `sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"` + `referrerPolicy="no-referrer"`. Omitting `allow-top-navigation`/`allow-popups` makes the browser block ad redirects/popups from vidsrc.su etc. while keeping inline playback. Existing `beforeunload` blocker kept as defense-in-depth.

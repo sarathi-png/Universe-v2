@@ -12,5 +12,7 @@
 | 2026-08-08 | Hand-rolled in-memory rate limiter instead of express-rate-limit | Zero new dependencies; 60s window per IP+path; applied to scan/media/scrape/tamilmv routes |
 | 2026-08-08 | Manual security headers instead of helmet | Avoids helmet CSP conflict with custom /watch CSP; only 4 headers needed |
 | 2026-08-08 | ErrorBoundary gains `fallback` render prop | Reuse for Player-level isolation without duplicating the class |
+| 2026-08-10 | Reverted embed iframe sandbox + no-referrer; kept plain iframe | vidsrc.su uses Google IMA which refuses sandboxed frames ("can't be embedded in a sandboxed frame") — sandbox killed playback entirely |
+| 2026-08-10 | Ad-redirect mitigation without sandbox: `beforeunload` preventDefault + returnValue="" (cancelable "Leave site?" prompt) + "Mirror · may show ads" labels | Sandbox is the only hard block but is incompatible with the provider; prompt + labeling is the achievable best-effort |
 | 2026-08-10 | Sandbox embed iframe (`allow-scripts allow-same-origin allow-presentation allow-forms`, no top-nav/popups) + `no-referrer` | Blocks ad redirects/popups from embed providers at the browser level; inline playback unaffected; beforeunload blocker kept as second layer |
 | 2026-08-10 | "Watch Now" on Tamil Dubbed cards: visible by default on mobile, hover-reveal only at `md+` | `group-hover` never fires on touch devices (Tailwind v4 `@media (hover:hover)`), leaving the button permanently hidden |
