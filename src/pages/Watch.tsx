@@ -468,7 +468,7 @@ export default function Watch() {
                           </span>
                         ) : (
                           <span className="rounded bg-amber-600/20 px-1.5 text-[10px] text-amber-300 font-semibold">
-                            Mirror
+                            Mirror · may show ads
                           </span>
                         )}
                         <span className="rounded bg-black/40 px-1.5 text-[10px] text-zinc-400">

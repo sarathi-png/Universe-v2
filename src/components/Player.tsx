@@ -9,12 +9,12 @@ function enableEmbedBlocker() {
   embedBlockerCount++;
   if (embedBlockerCount > 1 || embedNavBlocker) return;
   embedNavBlocker = (e: Event) => {
+    // Best-effort: make top-window redirects from the embed cancelable.
+    // Chrome/Firefox show a "Leave site?" prompt (gated on user activation,
+    // which the ad click provides) so the user can stay instead of being
+    // yanked to an ad site.
     e.preventDefault();
-    const msg = (e as any).target?.outerHTML || "";
-    if (msg.includes("window.open") || msg.includes("location") || msg.includes("href")) return;
-    if (e.type === "beforeunload") {
-      window.location.hash = "blocked-redirect";
-    }
+    (e as BeforeUnloadEvent).returnValue = "";
   };
   window.addEventListener("beforeunload", embedNavBlocker);
 }
@@ -234,8 +234,6 @@ export default function Player({
           ref={iframeRef}
           src={src}
           className="relative z-[1] h-full w-full"
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-          referrerPolicy="no-referrer"
           allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
           onLoad={() => {
