@@ -47,8 +47,8 @@ function PopularCard({ item }: { item: DubmvPopularItem }) {
         ) : (
           <PosterPlaceholder title={item.title} className="h-full w-full" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
-        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full transition group-hover:translate-y-0">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:opacity-0 transition md:group-hover:opacity-100" />
+        <div className="absolute bottom-0 left-0 right-0 p-3 md:translate-y-full transition md:group-hover:translate-y-0">
           {item.cached && item.fileId ? (
             <button
               onClick={() => navigate(`/watch/dubmv/${item.fileId}`, { state: { entry: item } })}
@@ -64,7 +64,7 @@ function PopularCard({ item }: { item: DubmvPopularItem }) {
           {item.quality}
         </div>
       )}
-      <div className="absolute bottom-1 left-2 right-2 opacity-100 transition duration-300 group-hover:opacity-0">
+      <div className="absolute bottom-14 left-2 right-2 md:bottom-1 opacity-100 transition duration-300 md:group-hover:opacity-0">
         <p className="truncate text-sm font-semibold text-white drop-shadow-lg">{item.title}</p>
         <p className="text-xs text-zinc-400">{item.year}</p>
       </div>
@@ -301,8 +301,8 @@ function ExtraCachedCard({ entry }: { entry: any }) {
         ) : (
           <PosterPlaceholder title={entry.title} className="h-full w-full" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
-        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full transition group-hover:translate-y-0">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:opacity-0 transition md:group-hover:opacity-100" />
+        <div className="absolute bottom-0 left-0 right-0 p-3 md:translate-y-full transition md:group-hover:translate-y-0">
           <button
             onClick={() => navigate(`/watch/dubmv/${entry.fileId}`, { state: { entry } })}
             className="w-full rounded-lg bg-violet-600 py-2 text-center text-sm font-bold text-white transition hover:bg-violet-500"
@@ -314,7 +314,7 @@ function ExtraCachedCard({ entry }: { entry: any }) {
       <div className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
         {entry.quality}
       </div>
-      <div className="absolute bottom-1 left-2 right-2 opacity-100 transition duration-300 group-hover:opacity-0">
+      <div className="absolute bottom-14 left-2 right-2 md:bottom-1 opacity-100 transition duration-300 md:group-hover:opacity-0">
         <p className="truncate text-sm font-semibold text-white drop-shadow-lg">{entry.title}</p>
         <p className="text-xs text-zinc-400">{entry.year}</p>
       </div>

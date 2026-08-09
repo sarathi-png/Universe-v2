@@ -234,6 +234,8 @@ export default function Player({
           ref={iframeRef}
           src={src}
           className="relative z-[1] h-full w-full"
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+          referrerPolicy="no-referrer"
           allow="autoplay; encrypted-media; fullscreen"
           allowFullScreen
           onLoad={() => {
