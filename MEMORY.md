@@ -1,3 +1,15 @@
+# Session Log — 2026-08-10
+
+## What Was Done
+- **Mobile "Watch Now" fix (Tamil Dubbed)**: `PopularCard`/`ExtraCachedCard` in `TamilDubbed.tsx` used `group-hover` reveal for the button — invisible on touch devices (Tailwind v4 gates hover behind `@media (hover:hover)`). Now visible by default on mobile (`md:translate-y-full md:group-hover:translate-y-0`), title bumped to `bottom-14 md:bottom-1`.
+- **Ad redirect fix (embeds)**: `Player.tsx` embed iframe now has `sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"` + `referrerPolicy="no-referrer"`. Omitting `allow-top-navigation`/`allow-popups` makes the browser block ad redirects/popups from vidsrc.su etc. while keeping inline playback. Existing `beforeunload` blocker kept as defense-in-depth.
+- **Verified**: typecheck + build green.
+
+## Next Steps
+- Deploy + manually verify: `/browse/tamil-dubbed` on mobile (button visible), Mirror source on `/watch` (no ad redirect, playback works).
+
+---
+
 # Session Log — 2026-08-08
 
 ## What Was Done
